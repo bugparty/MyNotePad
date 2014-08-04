@@ -51,11 +51,11 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="small.ico">
+    <Image Include="res\MyNotePad.ico">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="MyNotePad.ico">
-      <Filter>资源文件</Filter>
-    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="MyNotePad.exe.manifest" />
   </ItemGroup>
 </Project>

@@ -97,8 +97,10 @@
     <ResourceCompile Include="MyNotePad.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="MyNotePad.ico" />
-    <Image Include="small.ico" />
+    <Image Include="res\MyNotePad.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="MyNotePad.exe.manifest" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
