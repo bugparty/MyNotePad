@@ -54,6 +54,9 @@
     <Image Include="res\MyNotePad.ico">
       <Filter>资源文件</Filter>
     </Image>
+    <Image Include="res\MyNotePadSmall.ico">
+      <Filter>资源文件</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="MyNotePad.exe.manifest" />

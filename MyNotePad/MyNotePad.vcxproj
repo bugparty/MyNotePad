@@ -98,6 +98,7 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\MyNotePad.ico" />
+    <Image Include="res\MyNotePadSmall.ico" />
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="MyNotePad.exe.manifest" />

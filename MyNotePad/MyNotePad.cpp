@@ -9,7 +9,7 @@
 
 // 全局变量: 
 HINSTANCE hInst;								// 当前实例
-TCHAR szTitle[MAX_LOADSTRING];					// 标题栏文本
+TCHAR szAppTitle[MAX_LOADSTRING];					// 标题栏文本
 TCHAR szWindowClass[MAX_LOADSTRING];			// 主窗口类名
 
 // 此代码模块中包含的函数的前向声明: 
@@ -33,7 +33,7 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 	HACCEL hAccelTable;
 
 	// 初始化全局字符串
-	LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
+	LoadString(hInstance, IDS_APP_TITLE, szAppTitle, MAX_LOADSTRING);
 	LoadString(hInstance, IDC_MYNOTEPAD, szWindowClass, MAX_LOADSTRING);
 	MyRegisterClass(hInstance);
 
@@ -102,7 +102,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
    hInst = hInstance; // 将实例句柄存储在全局变量中
 
-   hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
+   hWnd = CreateWindow(szWindowClass, szAppTitle, WS_OVERLAPPEDWINDOW,
       CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
 
    if (!hWnd)
@@ -132,19 +132,45 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	PAINTSTRUCT ps;
 	HDC hdc;
 	TEXTMETRIC tm;
-	static int cxChar, cyChar,cxClient, cyClient;
+	static int cxChar, cyChar, cxClient, cyClient;
 	static int iVertPos;
 	static SCROLLINFO si;
 	static HWND hwndEdit;
 	switch (message)
 	{
 	case WM_COMMAND:
+		if (lParam){
+			if (LOWORD(lParam) == ID_EDIT && (HIWORD(wParam) == EN_ERRSPACE || HIWORD(wParam) == EN_MAXTEXT)){
+				MessageBox(hWnd, _T("Edit control out of space."), szAppTitle, MB_OK | MB_ICONSTOP);
+				return 0;
+			}
+
+		}
 		wmId = LOWORD(wParam);
 		wmEvent = HIWORD(wParam);
 		// 分析菜单选择: 
 		switch (wmId)
 		{
-		case IDM_ABOUT:
+		case IDM_FILE_OPEN:
+		case IDM_FILE_NEW:
+		case IDM_FILE_SAVE:
+		case IDM_FILE_SAVEAS:
+		case IDM_FILE_PRINT:
+			MessageBeep(0);
+			return 0;
+		case IDM_EDIT_UNDO:
+			SendMessage(hwndEdit, WM_UNDO, 0, 0);
+			return 0;
+		case IDM_EDIT_COPY:
+			SendMessage(hwndEdit, WM_COPY, 0, 0);
+			return 0;
+		case IDM_EDIT_CUT:
+			SendMessage(hwndEdit, WM_CUT, 0, 0);
+			return 0;
+		case IDM_EDIT_PASTE:
+			SendMessage(hwndEdit, WM_PASTE, 0, 0);
+			return 0;
+		case IDM_HELP_ABOUT:
 			DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
 			break;
 		case IDM_EXIT:
@@ -153,13 +179,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		default:
 			return DefWindowProc(hWnd, message, wParam, lParam);
 		}
+
 		break;
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		break;
+
+
 	case WM_CREATE:
 		hdc = GetDC(hWnd);
 		GetTextMetrics(hdc, &tm);
 		ReleaseDC(hWnd, hdc);
 
-		CreateEditControl(hwndEdit,hWnd);
+		CreateEditControl(hwndEdit, hWnd);
 		return 0;
 
 		break;
@@ -178,7 +210,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 		//SetScrollInfo should be the last line because it will endup the callback immedately
 		SetScrollInfo(hWnd, SB_VERT, &si, TRUE);
-	
+
 		return 0;
 		break;
 
@@ -234,15 +266,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				NULL, NULL);
 			UpdateWindow(hWnd);
 		}
- 
-		break;
-		
-	case WM_DESTROY:
-		PostQuitMessage(0);
+
 		break;
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
+
 	}
-	return 0;
 }
 
