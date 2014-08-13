@@ -34,3 +34,6 @@ VOID CreateEditControl(HWND &hwndEdit, HWND hWnd){
 		NULL);                /* pointer not needed     */
 
 }
+VOID OpenDialogFileOpen(){
+
+}
