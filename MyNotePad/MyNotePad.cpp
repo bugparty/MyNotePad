@@ -1,4 +1,4 @@
-// MyNotePad.cpp : ¶¨ÒåÓ¦ÓÃ³ÌĞòµÄÈë¿Úµã¡£
+ï»¿// MyNotePad.cpp : å®šä¹‰åº”ç”¨ç¨‹åºçš„å…¥å£ç‚¹ã€‚
 //
 
 #include "stdafx.h"
@@ -7,17 +7,19 @@
 
 #define MAX_LOADSTRING 100
 
-// È«¾Ö±äÁ¿: 
-HINSTANCE hInst;								// µ±Ç°ÊµÀı
-TCHAR szAppTitle[MAX_LOADSTRING];					// ±êÌâÀ¸ÎÄ±¾
-TCHAR szWindowClass[MAX_LOADSTRING];			// Ö÷´°¿ÚÀàÃû
+// å…¨å±€å˜é‡: 
+HINSTANCE hInst;								// å½“å‰å®ä¾‹
+TCHAR szAppTitle[MAX_LOADSTRING];					// The title bar text
+TCHAR szWindowClass[MAX_LOADSTRING];			// the main window class name
+TCHAR szFailedToLoadCommCtl[MAX_LOADSTRING];
 
 
-// ´Ë´úÂëÄ£¿éÖĞ°üº¬µÄº¯ÊıµÄÇ°ÏòÉùÃ÷: 
+// æ­¤ä»£ç æ¨¡å—ä¸­åŒ…å«çš„å‡½æ•°çš„å‰å‘å£°æ˜: 
 ATOM				MyRegisterClass(HINSTANCE hInstance);
 BOOL				InitInstance(HINSTANCE, int);
 LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
+VOID InitStrRes();
 
 #define nEditID 40001
 
@@ -29,16 +31,15 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
 
- 	// TODO:  ÔÚ´Ë·ÅÖÃ´úÂë¡£
+ 	// TODO:  åœ¨æ­¤æ”¾ç½®ä»£ç ã€‚
 	MSG msg;
 	HACCEL hAccelTable;
 
-	// ³õÊ¼»¯È«¾Ö×Ö·û´®
-	LoadString(hInstance, IDS_APP_TITLE, szAppTitle, MAX_LOADSTRING);
-	LoadString(hInstance, IDC_MYNOTEPAD, szWindowClass, MAX_LOADSTRING);
+	// åˆå§‹åŒ–å…¨å±€å­—ç¬¦ä¸²
+	InitStrRes();
 	MyRegisterClass(hInstance);
 
-	// Ö´ĞĞÓ¦ÓÃ³ÌĞò³õÊ¼»¯: 
+	// æ‰§è¡Œåº”ç”¨ç¨‹åºåˆå§‹åŒ–: 
 	if (!InitInstance (hInstance, nCmdShow))
 	{
 		return FALSE;
@@ -46,7 +47,7 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 
 	hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_MYNOTEPAD));
 
-	// Ö÷ÏûÏ¢Ñ­»·: 
+	// ä¸»æ¶ˆæ¯å¾ªç¯: 
 	while (GetMessage(&msg, NULL, 0, 0))
 	{
 		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
@@ -62,9 +63,9 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 
 
 //
-//  º¯Êı:  MyRegisterClass()
+//  å‡½æ•°:  MyRegisterClass()
 //
-//  Ä¿µÄ:  ×¢²á´°¿ÚÀà¡£
+//  ç›®çš„:  æ³¨å†Œçª—å£ç±»ã€‚
 //
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
@@ -88,20 +89,20 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 }
 
 //
-//   º¯Êı:  InitInstance(HINSTANCE, int)
+//   å‡½æ•°:  InitInstance(HINSTANCE, int)
 //
-//   Ä¿µÄ:  ±£´æÊµÀı¾ä±ú²¢´´½¨Ö÷´°¿Ú
+//   ç›®çš„:  ä¿å­˜å®ä¾‹å¥æŸ„å¹¶åˆ›å»ºä¸»çª—å£
 //
-//   ×¢ÊÍ: 
+//   æ³¨é‡Š: 
 //
-//        ÔÚ´Ëº¯ÊıÖĞ£¬ÎÒÃÇÔÚÈ«¾Ö±äÁ¿ÖĞ±£´æÊµÀı¾ä±ú²¢
-//        ´´½¨ºÍÏÔÊ¾Ö÷³ÌĞò´°¿Ú¡£
+//        åœ¨æ­¤å‡½æ•°ä¸­ï¼Œæˆ‘ä»¬åœ¨å…¨å±€å˜é‡ä¸­ä¿å­˜å®ä¾‹å¥æŸ„å¹¶
+//        åˆ›å»ºå’Œæ˜¾ç¤ºä¸»ç¨‹åºçª—å£ã€‚
 //
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
    HWND hWnd;
 
-   hInst = hInstance; // ½«ÊµÀı¾ä±ú´æ´¢ÔÚÈ«¾Ö±äÁ¿ÖĞ
+   hInst = hInstance; // å°†å®ä¾‹å¥æŸ„å­˜å‚¨åœ¨å…¨å±€å˜é‡ä¸­
 
    hWnd = CreateWindow(szWindowClass, szAppTitle, WS_OVERLAPPEDWINDOW,
       CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
@@ -111,6 +112,14 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
       return FALSE;
    }
 
+   INITCOMMONCONTROLSEX iccx;
+   iccx.dwSize = sizeof(INITCOMMONCONTROLSEX);
+   iccx.dwICC = ICC_BAR_CLASSES;
+   if (!InitCommonControlsEx(&iccx)){
+	   MessageBox(hWnd, szFailedToLoadCommCtl, szAppTitle, MB_OK);
+	   return FALSE;
+   }
+
    ShowWindow(hWnd, nCmdShow);
    UpdateWindow(hWnd);
 
@@ -118,13 +127,13 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 }
 
 //
-//  º¯Êı:  WndProc(HWND, UINT, WPARAM, LPARAM)
+//  å‡½æ•°:  WndProc(HWND, UINT, WPARAM, LPARAM)
 //
-//  Ä¿µÄ:    ´¦ÀíÖ÷´°¿ÚµÄÏûÏ¢¡£
+//  ç›®çš„:    å¤„ç†ä¸»çª—å£çš„æ¶ˆæ¯ã€‚
 //
-//  WM_COMMAND	- ´¦ÀíÓ¦ÓÃ³ÌĞò²Ëµ¥
-//  WM_PAINT	- »æÖÆÖ÷´°¿Ú
-//  WM_DESTROY	- ·¢ËÍÍË³öÏûÏ¢²¢·µ»Ø
+//  WM_COMMAND	- å¤„ç†åº”ç”¨ç¨‹åºèœå•
+//  WM_PAINT	- ç»˜åˆ¶ä¸»çª—å£
+//  WM_DESTROY	- å‘é€é€€å‡ºæ¶ˆæ¯å¹¶è¿”å›
 //
 //
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -149,12 +158,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 		wmId = LOWORD(wParam);
 		wmEvent = HIWORD(wParam);
-		// ·ÖÎö²Ëµ¥Ñ¡Ôñ: 
+		// åˆ†æèœå•é€‰æ‹©: 
 		switch (wmId)
 		{
 		case IDM_FILE_OPEN:
-		case IDM_FILE_NEW:
+			OpenDialogFileOpen(hWnd);
+			return 0;
 		case IDM_FILE_SAVE:
+			OpenDialogFileSave(hWnd);
+			return 0;
+		case IDM_FILE_NEW:
+
 		case IDM_FILE_SAVEAS:
 		case IDM_FILE_PRINT:
 			MessageBeep(0);
@@ -180,10 +194,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		default:
 			return DefWindowProc(hWnd, message, wParam, lParam);
 		}
-
+		return 0;
 		break;
 	case WM_DESTROY:
 		PostQuitMessage(0);
+		return 0;
 		break;
 
 
@@ -217,10 +232,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);
-		// TODO:  ÔÚ´ËÌí¼ÓÈÎÒâ»æÍ¼´úÂë...
+		// TODO:  åœ¨æ­¤æ·»åŠ ä»»æ„ç»˜å›¾ä»£ç ...
 
 
 		EndPaint(hWnd, &ps);
+		return 0;
 		break;
 	case WM_VSCROLL:
 		si.cbSize = sizeof(si);
@@ -267,11 +283,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				NULL, NULL);
 			UpdateWindow(hWnd);
 		}
-
+		return 0;
 		break;
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
 
 	}
+}
+//function to  Initialize global strings
+VOID InitStrRes(){
+	// Initialize global strings
+	LoadString(hInst, IDC_MYNOTEPAD, szWindowClass, MAX_LOADSTRING);
+	LoadString(hInst, IDS_APP_TITLE, szAppTitle, MAX_LOADSTRING);
+	LoadString(hInst, IDS_FAILED_TO_INIT_COMM_CTL, szFailedToLoadCommCtl, MAX_LOADSTRING);
 }
 
