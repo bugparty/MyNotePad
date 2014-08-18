@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "Dialog.h"
 #include "resource.h"
+#include "Utils.h"
 // “关于”框的消息处理程序。
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -47,7 +48,7 @@ VOID OpenDialogFileOpen(HWND hWnd){
 	ofn.hwndOwner = hWnd;
 	ofn.lpstrFile = szFile;
 	//Set lpstrfile[0] to \0 so that GetOpenFileName does not use the contents of szFile to initialize itself.
-	ofn.lpstrFile[0] = '\0';
+	ofn.lpstrFile[0] = _T('\0');
 	ofn.nMaxFile = sizeof(szFile);
 	ofn.nFilterIndex = 1;
 	ofn.lpstrFilter = _T("All\0*.*\0Text\0*.TXT\0");
@@ -66,11 +67,12 @@ VOID OpenDialogFileOpen(HWND hWnd){
 			(HANDLE)NULL);
 	}
 	else{
-		GetLastError();
+		DWORD dwError = GetLastError();
+		Error2Msgbox(dwError);
 	}
 
 }
-VOID OpenDialogFileSave(HWND hWnd){
+VOID OpenDialogFileSaveAs(HWND hWnd){
 	OPENFILENAME ofn;
 	TCHAR szFile[MAX_PATH];
 
@@ -102,7 +104,8 @@ VOID OpenDialogFileSave(HWND hWnd){
 			(HANDLE)NULL);
 	}
 	else{
-		GetLastError();
+		DWORD dwError = GetLastError();
+		Error2Msgbox(dwError);
 	}
 
 }

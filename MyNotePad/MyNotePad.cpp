@@ -9,6 +9,7 @@
 
 // 全局变量: 
 HINSTANCE hInst;								// 当前实例
+HWND hWnd;										//当前窗口句柄
 TCHAR szAppTitle[MAX_LOADSTRING];					// The title bar text
 TCHAR szWindowClass[MAX_LOADSTRING];			// the main window class name
 TCHAR szFailedToLoadCommCtl[MAX_LOADSTRING];
@@ -100,7 +101,6 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 //
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-   HWND hWnd;
 
    hInst = hInstance; // 将实例句柄存储在全局变量中
 
@@ -165,11 +165,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			OpenDialogFileOpen(hWnd);
 			return 0;
 		case IDM_FILE_SAVE:
-			OpenDialogFileSave(hWnd);
+			
 			return 0;
 		case IDM_FILE_NEW:
 
 		case IDM_FILE_SAVEAS:
+			OpenDialogFileSaveAs(hWnd);
+			return 0;
 		case IDM_FILE_PRINT:
 			MessageBeep(0);
 			return 0;
