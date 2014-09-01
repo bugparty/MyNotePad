@@ -162,7 +162,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		switch (wmId)
 		{
 		case IDM_FILE_OPEN:
-			OpenDialogFileOpen(hWnd);
+			OpenDialogFileOpen(hWnd,hwndEdit);
 			return 0;
 		case IDM_FILE_SAVE:
 			
@@ -210,6 +210,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		ReleaseDC(hWnd, hdc);
 
 		CreateEditControl(hwndEdit, hWnd);
+		OutputDebugString(_T("Windows Created"));
 		return 0;
 
 		break;

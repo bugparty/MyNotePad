@@ -2,6 +2,7 @@
 #include "Dialog.h"
 #include "resource.h"
 #include "Utils.h"
+#include "Document.h"
 // “关于”框的消息处理程序。
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -36,7 +37,7 @@ VOID CreateEditControl(HWND &hwndEdit, HWND hWnd){
 		NULL);                /* pointer not needed     */
 
 }
-VOID OpenDialogFileOpen(HWND hWnd){
+VOID OpenDialogFileOpen(HWND hWnd, HWND hEdit){
 	OPENFILENAME ofn;
 	TCHAR szFile[MAX_PATH];
 
@@ -58,13 +59,8 @@ VOID OpenDialogFileOpen(HWND hWnd){
 
 	//Display the Open dialog box
 	if (GetOpenFileName(&ofn) == TRUE){
-		hf = CreateFile(ofn.lpstrFile,
-			GENERIC_READ,
-			0,
-			(LPSECURITY_ATTRIBUTES)NULL,
-			OPEN_EXISTING,
-			FILE_ATTRIBUTE_NORMAL,
-			(HANDLE)NULL);
+	
+		DO_OPEN_FILE(hEdit, ofn.lpstrFile);
 	}
 	else{
 		DWORD dwError = GetLastError();
