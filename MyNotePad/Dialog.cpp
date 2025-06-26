@@ -465,6 +465,22 @@ VOID ShowFindDialog(HWND hWnd, HWND hEdit) {
 	}
 }
 
+// Find Next function - uses the last search parameters
+VOID FindNext(HWND hEdit) {
+	// Check if there's a previous search text
+	if (_tcslen(g_szFindText) == 0) {
+		// No previous search text, show find dialog
+		ShowFindDialog(GetParent(hEdit), hEdit);
+		return;
+	}
+
+	// Use the stored search parameters to find the next occurrence
+	if (!FindTextInEdit(hEdit, g_szFindText, g_bMatchCase, g_bWholeWord, TRUE)) {
+		// If not found, show message
+		MessageBox(GetParent(hEdit), _T("Cannot find the specified text."), _T("Find Next"), MB_OK | MB_ICONINFORMATION);
+	}
+}
+
 // Replace Dialog Procedure
 INT_PTR CALLBACK ReplaceDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 	UNREFERENCED_PARAMETER(lParam);

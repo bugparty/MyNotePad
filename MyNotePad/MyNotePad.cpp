@@ -197,7 +197,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			SelectAllText(hwndEdit);
 			return 0;
 		case IDM_EDIT_FIND:
-			ShowFindDialog(hWnd, hwndEdit);
+			ShowFindDialog(hWnd,hwndEdit);
+			return 0;
+		case IDM_EDIT_FINDNEXT:
+			FindNext(hwndEdit);
 			return 0;
 		case IDM_EDIT_REPLACE:
 			ShowReplaceDialog(hWnd, hwndEdit);
