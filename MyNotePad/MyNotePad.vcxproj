@@ -84,16 +84,20 @@
     <ClInclude Include="Document.h" />
     <ClInclude Include="Encoding.h" />
     <ClInclude Include="MyNotePad.h" />
+    <ClInclude Include="Print.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Dialog.h" />
+    <ClInclude Include="Registry.h" />
     <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Dialog.cpp" />
     <ClCompile Include="Encoding.cpp" />
     <ClCompile Include="MyNotePad.cpp" />
+    <ClCompile Include="Print.cpp" />
+    <ClCompile Include="Registry.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>

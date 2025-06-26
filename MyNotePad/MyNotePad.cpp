@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "MyNotePad.h"
 #include "Dialog.h"
+#include "Print.h"
 
 #define MAX_LOADSTRING 100
 
@@ -204,6 +205,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			return 0;
 		case IDM_EDIT_REPLACE:
 			ShowReplaceDialog(hWnd, hwndEdit);
+			return 0;
+		case IDM_EDIT_GOTO:
+			ShowGoToDialog(hWnd, hwndEdit);
+			return 0;
+		case IDM_FORMAT_FONT:
+			ShowFontDialog(hWnd, hwndEdit);
 			return 0;
 		case IDM_HELP_ABOUT:
 			DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
