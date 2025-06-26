@@ -193,6 +193,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case IDM_EDIT_FIND:
 			ShowFindDialog(hWnd, hwndEdit);
 			return 0;
+		case IDM_EDIT_REPLACE:
+			ShowReplaceDialog(hWnd, hwndEdit);
+			return 0;
 		case IDM_HELP_ABOUT:
 			DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
 			break;

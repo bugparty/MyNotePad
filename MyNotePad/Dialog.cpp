@@ -13,8 +13,10 @@ static BOOL g_bHasFileName = FALSE;
 
 // Global variables for Find functionality
 static HWND g_hFindDialog = NULL;
+static HWND g_hReplaceDialog = NULL;
 static HWND g_hEditControl = NULL;
 static TCHAR g_szFindText[256] = {0};
+static TCHAR g_szReplaceText[256] = {0};
 static BOOL g_bMatchCase = FALSE;
 static BOOL g_bWholeWord = FALSE;
 
@@ -242,6 +244,76 @@ BOOL FindTextInEdit(HWND hEdit, LPCTSTR findText, BOOL matchCase, BOOL wholeWord
 	return FALSE;
 }
 
+// Helper function to replace text in edit control
+BOOL ReplaceTextInEdit(HWND hEdit, LPCTSTR findText, LPCTSTR replaceText, BOOL matchCase, BOOL wholeWord, BOOL replaceAll) {
+	int replacedCount = 0;
+	DWORD selStart, selEnd;
+	
+	if (replaceAll) {
+		// For replace all, start from the beginning
+		SendMessage(hEdit, EM_SETSEL, 0, 0);
+		
+		while (FindTextInEdit(hEdit, findText, matchCase, wholeWord, TRUE)) {
+			// Get current selection
+			SendMessage(hEdit, EM_GETSEL, (WPARAM)&selStart, (LPARAM)&selEnd);
+			
+			// Replace the selected text
+			SendMessage(hEdit, EM_REPLACESEL, TRUE, (LPARAM)replaceText);
+			
+			// Move cursor to after the replaced text to continue searching
+			int newPos = selStart + _tcslen(replaceText);
+			SendMessage(hEdit, EM_SETSEL, newPos, newPos);
+			
+			replacedCount++;
+			
+			// Prevent infinite loop for empty search strings
+			if (_tcslen(findText) == 0) break;
+		}
+		
+		return replacedCount > 0;
+	} else {
+		// For single replace, check if current selection matches the find text
+		SendMessage(hEdit, EM_GETSEL, (WPARAM)&selStart, (LPARAM)&selEnd);
+		
+		if (selStart != selEnd) {
+			// Get selected text
+			int selLength = selEnd - selStart;
+			LPTSTR selectedText = (LPTSTR)LocalAlloc(LMEM_ZEROINIT, (selLength + 1) * sizeof(TCHAR));
+			if (selectedText) {
+				// Get all text first
+				int textLen = GetWindowTextLength(hEdit);
+				LPTSTR allText = (LPTSTR)LocalAlloc(LMEM_ZEROINIT, (textLen + 1) * sizeof(TCHAR));
+				if (allText) {
+					GetWindowText(hEdit, allText, textLen + 1);
+					// Copy the selected portion
+					_tcsncpy_s(selectedText, selLength + 1, allText + selStart, selLength);
+					LocalFree(allText);
+					
+					// Check if selected text matches find text
+					BOOL matches = FALSE;
+					if (matchCase) {
+						matches = (_tcscmp(selectedText, findText) == 0);
+					} else {
+						matches = (_tcsicmp(selectedText, findText) == 0);
+					}
+					
+					if (matches) {
+						// Replace the selected text
+						SendMessage(hEdit, EM_REPLACESEL, TRUE, (LPARAM)replaceText);
+						LocalFree(selectedText);
+						return TRUE;
+					}
+				}
+				
+				LocalFree(selectedText);
+			}
+		}
+		
+		// If no matching selection, find the next occurrence
+		return FindTextInEdit(hEdit, findText, matchCase, wholeWord, TRUE);
+	}
+}
+
 // Find Dialog Procedure
 INT_PTR CALLBACK FindDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 	UNREFERENCED_PARAMETER(lParam);
@@ -315,6 +387,131 @@ VOID ShowFindDialog(HWND hWnd, HWND hEdit) {
 	if (g_hFindDialog) {
 		// Show dialog but don't steal focus from edit control
 		ShowWindow(g_hFindDialog, SW_SHOW);
+		// Ensure edit control keeps focus
+		SetFocus(hEdit);
+	}
+}
+
+// Replace Dialog Procedure
+INT_PTR CALLBACK ReplaceDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
+	UNREFERENCED_PARAMETER(lParam);
+	
+	switch (message) {
+	case WM_INITDIALOG:
+		// Set focus to the find text box
+		SetFocus(GetDlgItem(hDlg, IDC_REPLACE_FIND_TEXT));
+		// Set previous search text if any
+		if (g_szFindText[0] != '\0') {
+			SetDlgItemText(hDlg, IDC_REPLACE_FIND_TEXT, g_szFindText);
+		}
+		if (g_szReplaceText[0] != '\0') {
+			SetDlgItemText(hDlg, IDC_REPLACE_WITH_TEXT, g_szReplaceText);
+		}
+		// Set checkbox states
+		CheckDlgButton(hDlg, IDC_REPLACE_MATCH_CASE, g_bMatchCase ? BST_CHECKED : BST_UNCHECKED);
+		CheckDlgButton(hDlg, IDC_REPLACE_WHOLE_WORD, g_bWholeWord ? BST_CHECKED : BST_UNCHECKED);
+		return (INT_PTR)FALSE; // Return FALSE since we set focus manually
+
+	case WM_COMMAND:
+		switch (LOWORD(wParam)) {
+		case IDC_REPLACE_FIND_NEXT:
+			{
+				// Get search text
+				GetDlgItemText(hDlg, IDC_REPLACE_FIND_TEXT, g_szFindText, 255);
+				if (_tcslen(g_szFindText) == 0) {
+					MessageBox(hDlg, _T("Please enter text to find."), _T("Replace"), MB_OK | MB_ICONINFORMATION);
+					return (INT_PTR)TRUE;
+				}
+
+				// Get checkbox states
+				g_bMatchCase = IsDlgButtonChecked(hDlg, IDC_REPLACE_MATCH_CASE) == BST_CHECKED;
+				g_bWholeWord = IsDlgButtonChecked(hDlg, IDC_REPLACE_WHOLE_WORD) == BST_CHECKED;
+
+				// Perform search
+				if (!FindTextInEdit(g_hEditControl, g_szFindText, g_bMatchCase, g_bWholeWord, TRUE)) {
+					MessageBox(hDlg, _T("Cannot find the specified text."), _T("Replace"), MB_OK | MB_ICONINFORMATION);
+				}
+			}
+			return (INT_PTR)TRUE;
+
+		case IDC_REPLACE_REPLACE:
+			{
+				// Get search and replace text
+				GetDlgItemText(hDlg, IDC_REPLACE_FIND_TEXT, g_szFindText, 255);
+				GetDlgItemText(hDlg, IDC_REPLACE_WITH_TEXT, g_szReplaceText, 255);
+				
+				if (_tcslen(g_szFindText) == 0) {
+					MessageBox(hDlg, _T("Please enter text to find."), _T("Replace"), MB_OK | MB_ICONINFORMATION);
+					return (INT_PTR)TRUE;
+				}
+
+				// Get checkbox states
+				g_bMatchCase = IsDlgButtonChecked(hDlg, IDC_REPLACE_MATCH_CASE) == BST_CHECKED;
+				g_bWholeWord = IsDlgButtonChecked(hDlg, IDC_REPLACE_WHOLE_WORD) == BST_CHECKED;
+
+				// Perform replace
+				if (!ReplaceTextInEdit(g_hEditControl, g_szFindText, g_szReplaceText, g_bMatchCase, g_bWholeWord, FALSE)) {
+					MessageBox(hDlg, _T("Cannot find the specified text."), _T("Replace"), MB_OK | MB_ICONINFORMATION);
+				}
+			}
+			return (INT_PTR)TRUE;
+
+		case IDC_REPLACE_REPLACE_ALL:
+			{
+				// Get search and replace text
+				GetDlgItemText(hDlg, IDC_REPLACE_FIND_TEXT, g_szFindText, 255);
+				GetDlgItemText(hDlg, IDC_REPLACE_WITH_TEXT, g_szReplaceText, 255);
+				
+				if (_tcslen(g_szFindText) == 0) {
+					MessageBox(hDlg, _T("Please enter text to find."), _T("Replace"), MB_OK | MB_ICONINFORMATION);
+					return (INT_PTR)TRUE;
+				}
+
+				// Get checkbox states
+				g_bMatchCase = IsDlgButtonChecked(hDlg, IDC_REPLACE_MATCH_CASE) == BST_CHECKED;
+				g_bWholeWord = IsDlgButtonChecked(hDlg, IDC_REPLACE_WHOLE_WORD) == BST_CHECKED;
+
+				// Perform replace all
+				if (ReplaceTextInEdit(g_hEditControl, g_szFindText, g_szReplaceText, g_bMatchCase, g_bWholeWord, TRUE)) {
+					MessageBox(hDlg, _T("Replace operation completed."), _T("Replace"), MB_OK | MB_ICONINFORMATION);
+				} else {
+					MessageBox(hDlg, _T("Cannot find the specified text."), _T("Replace"), MB_OK | MB_ICONINFORMATION);
+				}
+			}
+			return (INT_PTR)TRUE;
+
+		case IDC_REPLACE_CLOSE:
+		case IDCANCEL:
+			g_hReplaceDialog = NULL;
+			EndDialog(hDlg, LOWORD(wParam));
+			return (INT_PTR)TRUE;
+		}
+		break;
+
+	case WM_CLOSE:
+		g_hReplaceDialog = NULL;
+		EndDialog(hDlg, 0);
+		return (INT_PTR)TRUE;
+	}
+	
+	return (INT_PTR)FALSE;
+}
+
+// Show Replace Dialog
+VOID ShowReplaceDialog(HWND hWnd, HWND hEdit) {
+	g_hEditControl = hEdit;
+	
+	// If dialog is already open, just bring it to front
+	if (g_hReplaceDialog && IsWindow(g_hReplaceDialog)) {
+		SetForegroundWindow(g_hReplaceDialog);
+		return;
+	}
+
+	// Create and show the dialog as a modeless dialog
+	g_hReplaceDialog = CreateDialog(hInst, MAKEINTRESOURCE(IDD_REPLACE_DIALOG), hWnd, ReplaceDialog);
+	if (g_hReplaceDialog) {
+		// Show dialog but don't steal focus from edit control
+		ShowWindow(g_hReplaceDialog, SW_SHOW);
 		// Ensure edit control keeps focus
 		SetFocus(hEdit);
 	}
