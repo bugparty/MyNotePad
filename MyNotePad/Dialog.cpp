@@ -842,6 +842,26 @@ VOID TestSelectAllFunction(HWND hEdit) {
 	SelectAllText(hEdit);
 }
 
+// Time/Date 插入功能实现
+VOID InsertDateTime(HWND hEdit) {
+	if (!hEdit) return;
+	
+	// 获取当前系统时间
+	SYSTEMTIME st;
+	GetLocalTime(&st);
+	
+	// 格式化日期时间字符串（使用标准格式：年/月/日 时:分）
+	TCHAR szDateTime[128];
+	_stprintf_s(szDateTime, 128, _T("%04d/%02d/%02d %02d:%02d"), 
+		st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute);
+	
+	// 在当前光标位置插入日期时间
+	SendMessage(hEdit, EM_REPLACESEL, TRUE, (LPARAM)szDateTime);
+	
+	// 确保编辑控件有焦点
+	SetFocus(hEdit);
+}
+
 // Word Wrap 相关函数实现
 
 // 初始化 Word Wrap 设置

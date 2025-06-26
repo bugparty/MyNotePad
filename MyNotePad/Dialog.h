@@ -28,6 +28,9 @@ VOID TestSelection(HWND hEdit);
 VOID SelectAllText(HWND hEdit);
 VOID TestSelectAllFunction(HWND hEdit);
 
+// Time/Date 插入功能
+VOID InsertDateTime(HWND hEdit);
+
 // Word Wrap 相关函数
 VOID InitializeWordWrap();
 VOID ToggleWordWrap(HWND hWnd, HWND hEdit);

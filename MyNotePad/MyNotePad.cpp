@@ -197,6 +197,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case IDM_EDIT_SELECTALL:
 			SelectAllText(hwndEdit);
 			return 0;
+		case IDM_EDIT_INSERTDATE:
+			InsertDateTime(hwndEdit);
+			return 0;
 		case IDM_EDIT_FIND:
 			ShowFindDialog(hWnd,hwndEdit);
 			return 0;

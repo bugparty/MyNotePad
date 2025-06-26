@@ -28,4 +28,4 @@ MyNotePad/Debug/*
 MyNotePad/Release/*
 *.opensdf
 .vs/MyNotePad/*
-
+dist/
