@@ -21,36 +21,7 @@ This project is a faithful recreation of the traditional Windows Notepad text ed
 - **Scrolling**: Vertical scrolling support for large documents
 - **Native Windows Integration**: Built using pure Win32 API for authentic Windows experience
 
-## How to Use Find and Replace
-
-### Find Dialog
-1. Go to **Edit > Find** or press **Ctrl+F** (if implemented)
-2. Enter the text you want to find in the "Find what:" field
-3. Optionally check:
-   - **Match case**: to perform case-sensitive search
-   - **Whole word**: to match complete words only
-4. Click **Find Next** or **Find Previous** to navigate through matches
-5. Click **Close** to close the dialog
-
-### Replace Dialog
-1. Go to **Edit > Replace** or press **Ctrl+H** (if implemented)
-2. Enter the text you want to find in the "Find what:" field
-3. Enter the replacement text in the "Replace with:" field
-4. Optionally check:
-   - **Match case**: to perform case-sensitive search
-   - **Whole word**: to match complete words only
-5. Use the following buttons:
-   - **Find Next**: locate the next occurrence without replacing
-   - **Replace**: replace the current selection and find next
-   - **Replace All**: replace all occurrences in the document
-   - **Close**: close the dialog
-
-### Features
-- Both dialogs are **modeless**, allowing you to continue editing while they remain open
-- Search text and options are preserved between sessions
-- Find and Replace dialogs share the same search settings
-
-## Technical Implementation
+## Technical Details
 
 - **Language**: C++
 - **API**: Win32 API

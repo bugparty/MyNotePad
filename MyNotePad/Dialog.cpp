@@ -20,6 +20,54 @@ static TCHAR g_szReplaceText[256] = {0};
 static BOOL g_bMatchCase = FALSE;
 static BOOL g_bWholeWord = FALSE;
 
+// Original edit control window procedure
+static WNDPROC g_pOriginalEditProc = NULL;
+
+// Global resources for edit control styling
+static HFONT g_hEditFont = NULL;
+static HBRUSH g_hEditBrush = NULL;
+
+// Subclassed edit control window procedure
+LRESULT CALLBACK EditControlSubclassProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
+	switch (message) {
+	case WM_GETDLGCODE:
+		{
+			// Tell the system we want to handle all keys, including Enter and Tab
+			return DLGC_WANTALLKEYS | DLGC_HASSETSEL | DLGC_WANTCHARS | DLGC_WANTARROWS;
+		}
+	
+	case WM_CHAR:
+		{
+			if (wParam == '\r' || wParam == 13 || wParam == VK_RETURN) {
+				// Handle Enter key - insert a newline
+				SendMessage(hWnd, EM_REPLACESEL, TRUE, (LPARAM)_T("\r\n"));
+				return 0;
+			}
+			break;
+		}
+		
+	case WM_KEYDOWN:
+		if (wParam == VK_RETURN) {
+			// Let WM_CHAR handle enter key processing
+		}
+		break;
+		
+	case WM_CTLCOLOREDIT:
+		{
+			// Set custom colors for the edit control
+			HDC hdc = (HDC)wParam;
+			SetTextColor(hdc, RGB(33, 37, 41));        // Dark gray text (modern)
+			SetBkColor(hdc, RGB(255, 255, 255));       // Pure white background
+			
+			// Return the global brush for the background
+			return (LRESULT)g_hEditBrush;
+		}
+	}
+	
+	// Call the original window procedure for all other messages
+	return CallWindowProc(g_pOriginalEditProc, hWnd, message, wParam, lParam);
+}
+
 // “关于”框的消息处理程序。
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -39,20 +87,64 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 	}
 	return (INT_PTR)FALSE;
 }
-// Creation of main EditControl
+// Creation of main EditControl with enhanced appearance
 VOID CreateEditControl(HWND &hwndEdit, HWND hWnd){
-	hwndEdit = CreateWindow(
-		_T("EDIT"),     /* predefined class                  */
-		NULL,       /* no window title                   */
+	hwndEdit = CreateWindowEx(
+		WS_EX_CLIENTEDGE,   /* enhanced border style              */
+		_T("EDIT"),         /* predefined class                  */
+		NULL,               /* no window title                   */
 		WS_CHILD | WS_VISIBLE | WS_HSCROLL | ES_MULTILINE |
-		ES_LEFT | WS_VSCROLL 
-		,
-		0, 0, 300, 220, /* set size in WM_SIZE message       */
-		hWnd,       /* parent window                     */
-		(HMENU)ID_EDIT, /* edit control ID         */
+		ES_LEFT | WS_VSCROLL | ES_WANTRETURN | ES_AUTOVSCROLL | ES_AUTOHSCROLL,
+		0, 0, 300, 220,     /* set size in WM_SIZE message       */
+		hWnd,               /* parent window                     */
+		(HMENU)ID_EDIT,     /* edit control ID                   */
 		(HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE),
-		NULL);                /* pointer not needed     */
+		NULL);              /* pointer not needed                */
 
+	// Subclass the edit control to handle Enter key properly
+	if (hwndEdit) {
+		g_pOriginalEditProc = (WNDPROC)SetWindowLongPtr(hwndEdit, GWLP_WNDPROC, (LONG_PTR)EditControlSubclassProc);
+		
+		// Create a beautiful font if not already created
+		if (!g_hEditFont) {
+			g_hEditFont = CreateFont(
+				16,                      // Height - slightly larger
+				0,                       // Width (0 = default)
+				0,                       // Escapement
+				0,                       // Orientation
+				FW_NORMAL,              // Weight
+				FALSE,                  // Italic
+				FALSE,                  // Underline
+				FALSE,                  // Strikeout
+				DEFAULT_CHARSET,        // Character set
+				OUT_DEFAULT_PRECIS,     // Output precision
+				CLIP_DEFAULT_PRECIS,    // Clipping precision
+				CLEARTYPE_QUALITY,      // Quality
+				DEFAULT_PITCH | FF_MODERN, // Pitch and family
+				_T("Segoe UI")          // Modern font (fallback to system default if not available)
+			);
+		}
+		
+		// Create background brush if not already created
+		if (!g_hEditBrush) {
+			g_hEditBrush = CreateSolidBrush(RGB(255, 255, 255)); // Pure white background
+		}
+		
+		// Set the font
+		if (g_hEditFont) {
+			SendMessage(hwndEdit, WM_SETFONT, (WPARAM)g_hEditFont, TRUE);
+		}
+		
+		// Add generous margins for better readability
+		SendMessage(hwndEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(12, 12));
+		
+		// Set tab stops for better formatting (every 4 characters)
+		int tabStops = 32; // 4 characters * 8 units per character
+		SendMessage(hwndEdit, EM_SETTABSTOPS, 1, (LPARAM)&tabStops);
+		
+		// Apply additional modern styling
+		ApplyModernEditStyling(hwndEdit);
+	}
 }
 VOID OpenDialogFileOpen(HWND hWnd, HWND hEdit){
 	OPENFILENAME ofn;
@@ -135,11 +227,6 @@ BOOL FindTextInEdit(HWND hEdit, LPCTSTR findText, BOOL matchCase, BOOL wholeWord
 	int textLen = GetWindowTextLength(hEdit);
 	if (textLen == 0) return FALSE;
 
-	// Debug output
-	TCHAR debugMsg[512];
-	_stprintf_s(debugMsg, 512, _T("Searching for: '%s', TextLength: %d"), findText, textLen);
-	OutputDebugString(debugMsg);
-
 	// Get all text from edit control
 	LPTSTR buffer = (LPTSTR)LocalAlloc(LMEM_ZEROINIT, (textLen + 1) * sizeof(TCHAR));
 	if (!buffer) return FALSE;
@@ -149,10 +236,6 @@ BOOL FindTextInEdit(HWND hEdit, LPCTSTR findText, BOOL matchCase, BOOL wholeWord
 	// Get current selection
 	DWORD selStart, selEnd;
 	SendMessage(hEdit, EM_GETSEL, (WPARAM)&selStart, (LPARAM)&selEnd);
-
-	// Debug output
-	_stprintf_s(debugMsg, 512, _T("Current selection: %d to %d"), selStart, selEnd);
-	OutputDebugString(debugMsg);
 
 	// Determine search start position
 	int startPos = findNext ? selEnd : (selStart > 0 ? selStart - 1 : 0);
@@ -209,21 +292,12 @@ BOOL FindTextInEdit(HWND hEdit, LPCTSTR findText, BOOL matchCase, BOOL wholeWord
 
 	// Select found text
 	if (foundPos >= 0) {
-		// Debug output
-		TCHAR debugMsg[256];
-		_stprintf_s(debugMsg, 256, _T("Found text at position: %d, length: %d"), foundPos, _tcslen(findText));
-		OutputDebugString(debugMsg);
-		
 		// IMPORTANT: Set focus to edit control AND bring parent window to front
 		SetFocus(hEdit);
 		SetForegroundWindow(GetParent(hEdit));
 		
 		// Set selection using proper casting
-		LRESULT result = SendMessage(hEdit, EM_SETSEL, (WPARAM)foundPos, (LPARAM)(foundPos + _tcslen(findText)));
-		
-		// Debug the result
-		_stprintf_s(debugMsg, 256, _T("EM_SETSEL result: %d"), result);
-		OutputDebugString(debugMsg);
+		SendMessage(hEdit, EM_SETSEL, (WPARAM)foundPos, (LPARAM)(foundPos + _tcslen(findText)));
 		
 		// Scroll to make sure the selection is visible
 		SendMessage(hEdit, EM_SCROLLCARET, 0, 0);
@@ -231,12 +305,6 @@ BOOL FindTextInEdit(HWND hEdit, LPCTSTR findText, BOOL matchCase, BOOL wholeWord
 		// Force a repaint to ensure the selection is visible
 		InvalidateRect(hEdit, NULL, TRUE);
 		UpdateWindow(hEdit);
-		
-		// Verify the selection was set
-		DWORD newSelStart, newSelEnd;
-		SendMessage(hEdit, EM_GETSEL, (WPARAM)&newSelStart, (LPARAM)&newSelEnd);
-		_stprintf_s(debugMsg, 256, _T("New selection: %d to %d"), newSelStart, newSelEnd);
-		OutputDebugString(debugMsg);
 		
 		return TRUE;
 	}
@@ -517,6 +585,38 @@ VOID ShowReplaceDialog(HWND hWnd, HWND hEdit) {
 	}
 }
 
+// Enhanced styling function for edit control
+VOID ApplyModernEditStyling(HWND hwndEdit) {
+	if (!hwndEdit) return;
+	
+	// Enable undo functionality (available in newer Windows versions)
+	#ifdef EM_SETUNDOLIMIT
+	SendMessage(hwndEdit, EM_SETUNDOLIMIT, 100, 0);  // Set undo limit
+	#endif
+	
+	// Set formatting rectangle to add internal padding
+	RECT rect;
+	GetClientRect(hwndEdit, &rect);
+	rect.left += 4;
+	rect.top += 4;
+	rect.right -= 4;
+	rect.bottom -= 4;
+	SendMessage(hwndEdit, EM_SETRECT, 0, (LPARAM)&rect);
+}
+
+// Cleanup function for edit control resources
+VOID CleanupEditResources() {
+	if (g_hEditFont) {
+		DeleteObject(g_hEditFont);
+		g_hEditFont = NULL;
+	}
+	
+	if (g_hEditBrush) {
+		DeleteObject(g_hEditBrush);
+		g_hEditBrush = NULL;
+	}
+}
+
 // Simple test function to verify selection works
 VOID TestSelection(HWND hEdit) {
 	// Test if basic selection works
@@ -524,5 +624,4 @@ VOID TestSelection(HWND hEdit) {
 	SendMessage(hEdit, EM_SETSEL, 0, 5); // Select first 5 characters
 	InvalidateRect(hEdit, NULL, TRUE);
 	UpdateWindow(hEdit);
-	OutputDebugString(_T("Test selection: first 5 characters should be selected"));
 }

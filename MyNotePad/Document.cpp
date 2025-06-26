@@ -1,9 +1,12 @@
 #include "stdafx.h"
 #include "Document.h"
 #include "Utils.h"
+#include "Encoding.h"
+
 static LPTSTR hDocBuf;
 static DWORD dwReaded;
 static DWORD dwCurrentBufSize = 4096 * 8;
+static EncodingType g_currentEncoding = ENCODING_UTF8; // 默认编码
 void init_buff(){
 	hDocBuf = (LPTSTR)LocalAlloc(LMEM_ZEROINIT, dwCurrentBufSize);
 
@@ -16,91 +19,73 @@ void free_buff(){
 
 
 VOID DO_OPEN_FILE(HWND hEdit, LPTSTR filename){
-	/*
-	HANDLE WINAPI CreateFile(
-	_In_      LPCTSTR lpFileName,
-	_In_      DWORD dwDesiredAccess,
-	_In_      DWORD dwShareMode,
-	_In_opt_  LPSECURITY_ATTRIBUTES lpSecurityAttributes,
-	_In_      DWORD dwCreationDisposition,
-	_In_      DWORD dwFlagsAndAttributes,
-	_In_opt_  HANDLE hTemplateFile
-	);
-	*/
-	HANDLE hFile = CreateFile(filename,
-		GENERIC_READ ,
-		NULL,
-		NULL,
-		OPEN_EXISTING | CREATE_NEW,
-		FILE_ATTRIBUTE_NORMAL,
-		NULL);
-	if (hFile == INVALID_HANDLE_VALUE){
-		OutputDebugString(_T("Open File Failed"));
+	// 使用新的编码检测和转换功能
+	LPWSTR content = NULL;
+	DWORD contentLength = 0;
+	EncodingType detectedEncoding = ENCODING_UNKNOWN;
+	
+	// 读取文件并自动检测编码
+	if (!ReadFileWithEncoding(filename, &content, &contentLength, &detectedEncoding)) {
+		OutputDebugString(_T("Open File Failed - Encoding Detection"));
 		Error2Msgbox(GetLastError());
 		return;
 	}
-	init_buff();
-	DWORD bytes_read;
-	LPTSTR pointer = hDocBuf;
-	do{
-		ReadFile(hFile, (LPVOID)pointer, 4096, &bytes_read, NULL);
-		pointer += bytes_read;
-
-	} while (bytes_read == 4096);
-	CloseHandle(hFile);
-	//TODO : stack overflow problems
-	dwReaded = pointer - hDocBuf + 1;
-	int ret = Edit_SetText(hEdit, hDocBuf);
 	
-	assert(ret != 0);
-	free_buff();
-
+	// 保存当前检测到的编码，用于保存时使用
+	g_currentEncoding = detectedEncoding;
+	
+	// 设置文本到编辑控件
+	SetWindowTextW(hEdit, content);
+	
+	// 清理内存
+	if (content) {
+		LocalFree(content);
+	}
+	
+	// 在状态栏或标题栏显示编码信息（可选）
+	TCHAR title[512];
+	LPCWSTR encodingName = GetEncodingName(detectedEncoding);
+	_stprintf_s(title, 512, _T("MyNotePad - %s [%s]"), filename, encodingName);
+	SetWindowText(GetParent(hEdit), title);
 }
 
 VOID DO_SAVE_FILE(HWND hEdit, LPTSTR filename){
-	// Get the length of text in the edit control
-	int textLength = Edit_GetTextLength(hEdit);
+	// 获取编辑控件中的文本长度
+	int textLength = GetWindowTextLengthW(hEdit);
 	if (textLength == 0) {
-		// Nothing to save
+		// 没有内容需要保存
 		return;
 	}
 
-	// Allocate buffer for the text (add 1 for null terminator)
-	LPTSTR textBuffer = (LPTSTR)LocalAlloc(LMEM_ZEROINIT, (textLength + 1) * sizeof(TCHAR));
+	// 分配内存存储文本
+	LPWSTR textBuffer = (LPWSTR)LocalAlloc(LMEM_ZEROINIT, (textLength + 1) * sizeof(WCHAR));
 	if (!textBuffer) {
 		OutputDebugString(_T("Failed to allocate memory for save buffer"));
 		return;
 	}
 
-	// Get the text from edit control
-	Edit_GetText(hEdit, textBuffer, textLength + 1);
+	// 从编辑控件获取文本
+	GetWindowTextW(hEdit, textBuffer, textLength + 1);
 
-	// Create/Open file for writing
-	HANDLE hFile = CreateFile(filename,
-		GENERIC_WRITE,
-		0,
-		NULL,
-		CREATE_ALWAYS,  // This will overwrite existing file
-		FILE_ATTRIBUTE_NORMAL,
-		NULL);
-
-	if (hFile == INVALID_HANDLE_VALUE) {
+	// 使用检测到的编码保存文件
+	if (!SaveFileWithEncoding(filename, textBuffer, textLength, g_currentEncoding)) {
 		OutputDebugString(_T("Save File Failed"));
 		Error2Msgbox(GetLastError());
-		LocalFree(textBuffer);
-		return;
 	}
 
-	// Write the text to file
-	DWORD bytesWritten;
-	BOOL writeResult = WriteFile(hFile, textBuffer, textLength * sizeof(TCHAR), &bytesWritten, NULL);
-	
-	if (!writeResult) {
-		OutputDebugString(_T("Write to File Failed"));
-		Error2Msgbox(GetLastError());
-	}
-
-	// Clean up
-	CloseHandle(hFile);
+	// 清理内存
 	LocalFree(textBuffer);
+}
+
+// 编码相关函数实现
+EncodingType GetCurrentEncoding() {
+	return g_currentEncoding;
+}
+
+VOID SetCurrentEncoding(EncodingType encoding) {
+	g_currentEncoding = encoding;
+}
+
+LPCWSTR GetCurrentEncodingName() {
+	return GetEncodingName(g_currentEncoding);
 }

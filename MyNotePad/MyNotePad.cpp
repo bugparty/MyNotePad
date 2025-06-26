@@ -208,6 +208,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		return 0;
 		break;
 	case WM_DESTROY:
+		CleanupEditResources(); // Clean up edit control resources
 		PostQuitMessage(0);
 		return 0;
 		break;
@@ -219,7 +220,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		ReleaseDC(hWnd, hdc);
 
 		CreateEditControl(hwndEdit, hWnd);
-		OutputDebugString(_T("Windows Created"));
 		return 0;
 
 		break;
@@ -253,6 +253,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		EndPaint(hWnd, &ps);
 		return 0;
 		break;
+
+	case WM_CTLCOLOREDIT:
+		{
+			// Handle color messages for the edit control
+			HDC hdc = (HDC)wParam;
+			HWND hEdit = (HWND)lParam;
+			
+			// Set custom colors for better appearance
+			SetTextColor(hdc, RGB(33, 37, 41));        // Dark gray text (modern)
+			SetBkColor(hdc, RGB(255, 255, 255));       // Pure white background
+			
+			// Create and return a brush for the background
+			static HBRUSH hEditBrush = CreateSolidBrush(RGB(255, 255, 255));
+			return (LRESULT)hEditBrush;
+		}
+
 	case WM_VSCROLL:
 		si.cbSize = sizeof(si);
 		si.fMask = SIF_ALL;
