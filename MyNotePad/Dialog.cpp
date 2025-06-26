@@ -5,6 +5,7 @@
 #include "Document.h"
 #include "Registry.h"
 #include "Print.h"
+#include "StatusBar.h"
 
 // External global variables
 extern HINSTANCE hInst;
@@ -51,6 +52,8 @@ LRESULT CALLBACK EditControlSubclassProc(HWND hWnd, UINT message, WPARAM wParam,
 			if (wParam == '\r' || wParam == 13 || wParam == VK_RETURN) {
 				// Handle Enter key - insert a newline
 				SendMessage(hWnd, EM_REPLACESEL, TRUE, (LPARAM)_T("\r\n"));
+				// Update cursor position after text change
+				UpdateCursorPosition(hWnd);
 				return 0;
 			}
 			break;
@@ -59,8 +62,22 @@ LRESULT CALLBACK EditControlSubclassProc(HWND hWnd, UINT message, WPARAM wParam,
 	case WM_KEYDOWN:
 		if (wParam == VK_RETURN) {
 			// Let WM_CHAR handle enter key processing
+		} else if (wParam == VK_UP || wParam == VK_DOWN || wParam == VK_LEFT || wParam == VK_RIGHT ||
+				   wParam == VK_HOME || wParam == VK_END || wParam == VK_PRIOR || wParam == VK_NEXT) {
+			// Call original procedure first, then update position
+			LRESULT result = CallWindowProc(g_pOriginalEditProc, hWnd, message, wParam, lParam);
+			UpdateCursorPosition(hWnd);
+			return result;
 		}
 		break;
+		
+	case WM_LBUTTONUP:
+		{
+			// Update cursor position after mouse click
+			LRESULT result = CallWindowProc(g_pOriginalEditProc, hWnd, message, wParam, lParam);
+			UpdateCursorPosition(hWnd);
+			return result;
+		}
 		
 	case WM_CTLCOLOREDIT:
 		{
@@ -75,10 +92,17 @@ LRESULT CALLBACK EditControlSubclassProc(HWND hWnd, UINT message, WPARAM wParam,
 	}
 	
 	// Call the original window procedure for all other messages
-	return CallWindowProc(g_pOriginalEditProc, hWnd, message, wParam, lParam);
+	LRESULT result = CallWindowProc(g_pOriginalEditProc, hWnd, message, wParam, lParam);
+	
+	// Update cursor position for text modification messages
+	if (message == WM_CHAR || message == WM_PASTE || message == WM_CUT || message == WM_CLEAR) {
+		UpdateCursorPosition(hWnd);
+	}
+	
+	return result;
 }
 
-// “关于”框的消息处理程序。
+// "关于"框的消息处理程序。
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	UNREFERENCED_PARAMETER(lParam);
@@ -966,6 +990,10 @@ VOID SetWordWrap(HWND hWnd, HWND hEdit, BOOL bEnable) {
 		
 		// 设置焦点
 		SetFocus(hNewEdit);
+		
+		// 更新状态栏信息
+		UpdateCursorPosition(hNewEdit);
+		UpdateStatusBarWordWrap(bEnable);
 	}
 	
 	g_bWordWrapEnabled = bEnable;
@@ -989,4 +1017,29 @@ VOID UpdateMenuWordWrap(HWND hWnd) {
 			CheckMenuItem(hFormatMenu, IDM_FORMAT_AUTOWRAP, uFlags);
 		}
 	}
+}
+
+// 状态栏更新相关函数实现
+
+// 更新光标位置信息到状态栏
+VOID UpdateCursorPosition(HWND hEdit) {
+	if (!hEdit || !IsWindow(hEdit)) {
+		return;
+	}
+	
+	// 获取当前光标位置
+	DWORD dwStart, dwEnd;
+	SendMessage(hEdit, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
+	
+	// 获取当前行号（从0开始）
+	int lineNumber = SendMessage(hEdit, EM_LINEFROMCHAR, dwStart, 0);
+	
+	// 获取该行的起始字符位置
+	int lineStart = SendMessage(hEdit, EM_LINEINDEX, lineNumber, 0);
+	
+	// 计算列号（从0开始）
+	int columnNumber = dwStart - lineStart;
+	
+	// 更新状态栏（转换为从1开始的显示）
+	UpdateStatusBarPosition(lineNumber + 1, columnNumber + 1);
 }

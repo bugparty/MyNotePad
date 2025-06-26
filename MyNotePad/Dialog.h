@@ -37,3 +37,6 @@ VOID ToggleWordWrap(HWND hWnd, HWND hEdit);
 BOOL IsWordWrapEnabled();
 VOID SetWordWrap(HWND hWnd, HWND hEdit, BOOL bEnable);
 VOID UpdateMenuWordWrap(HWND hWnd);
+
+// 状态栏更新相关函数
+VOID UpdateCursorPosition(HWND hEdit);

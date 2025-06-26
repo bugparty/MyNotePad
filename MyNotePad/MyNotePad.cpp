@@ -5,6 +5,7 @@
 #include "MyNotePad.h"
 #include "Dialog.h"
 #include "Print.h"
+#include "StatusBar.h"
 
 #define MAX_LOADSTRING 100
 
@@ -147,6 +148,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	static int cxChar, cyChar, cxClient, cyClient;
 	static int iVertPos;
 	static SCROLLINFO si;
+	int editHeight;
 	switch (message)
 	{
 	case WM_COMMAND:
@@ -218,6 +220,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case IDM_FORMAT_AUTOWRAP:
 			ToggleWordWrap(hWnd, hwndEdit);
 			return 0;
+		case IDM_VIEW_STATUSBAR:
+			ToggleStatusBar(hWnd);
+			return 0;
 		case IDM_HELP_ABOUT:
 			DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
 			break;
@@ -231,6 +236,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		break;
 	case WM_DESTROY:
 		CleanupEditResources(); // Clean up edit control resources
+		DestroyStatusBar(); // Clean up status bar resources
 		PostQuitMessage(0);
 		return 0;
 		break;
@@ -244,10 +250,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		// 初始化 Word Wrap 设置
 		InitializeWordWrap();
 		
+		// 初始化状态栏设置
+		InitializeStatusBar();
+		
 		CreateEditControl(hwndEdit, hWnd);
+		
+		// 创建状态栏
+		CreateStatusBar(hWnd);
 		
 		// 初始化菜单状态
 		UpdateMenuWordWrap(hWnd);
+		UpdateMenuStatusBar(hWnd);
+		
+		// 确保状态栏显示正确的 Word Wrap 状态
+		UpdateStatusBarWordWrap(IsWordWrapEnabled());
 		
 		return 0;
 
@@ -257,7 +273,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		cxClient = LOWORD(lParam);
 		cyClient = HIWORD(lParam);
 
-		MoveWindow(hwndEdit, 0, 0, cxClient, cyClient, TRUE);
+		// 更新状态栏布局
+		UpdateStatusBarLayout(hWnd);
+		
+		// 计算编辑控件的区域（需要排除状态栏的高度）
+		editHeight = cyClient;
+		if (IsStatusBarVisible()) {
+			HWND hStatusBar = GetStatusBarHandle();
+			if (hStatusBar && IsWindow(hStatusBar)) {
+				RECT rcStatus;
+				GetClientRect(hStatusBar, &rcStatus); // 使用 GetClientRect 而不是 GetWindowRect
+				editHeight -= (rcStatus.bottom - rcStatus.top);
+			}
+		}
+
+		MoveWindow(hwndEdit, 0, 0, cxClient, editHeight, TRUE);
 		// Set vertical scroll bar range and page size
 		si.cbSize = sizeof(si);
 		si.fMask = SIF_RANGE | SIF_PAGE;
