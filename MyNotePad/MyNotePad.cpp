@@ -18,13 +18,17 @@ TCHAR szAppTitle[MAX_LOADSTRING];				// The title bar text
 TCHAR szWindowClass[MAX_LOADSTRING];			// the main window class name
 TCHAR szFailedToLoadCommCtl[MAX_LOADSTRING];
 
+// Undo/Redo state tracking
+static BOOL g_bLastWasUndo = FALSE;				// Track if last operation was undo
+
 
 // Forward declarations of functions included in this code module: 
 ATOM				MyRegisterClass(HINSTANCE hInstance);
 BOOL				InitInstance(HINSTANCE, int);
 LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
-VOID InitStrRes();
+VOID				InitStrRes();
+VOID				ResetUndoState();
 
 #define nEditID 40001
 
@@ -158,7 +162,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				MessageBox(hWnd, _T("Edit control out of space."), szAppTitle, MB_OK | MB_ICONSTOP);
 				return 0;
 			}
-
+			// Reset undo state when user types or makes changes
+			if (LOWORD(lParam) == ID_EDIT && HIWORD(wParam) == EN_CHANGE) {
+				ResetUndoState();
+			}
 		}
 		wmId = LOWORD(wParam);
 		wmEvent = HIWORD(wParam);
@@ -183,19 +190,33 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			ShowPageSetupDialog(hWnd);
 			return 0;
 		case IDM_EDIT_UNDO:
-			SendMessage(hwndEdit, WM_UNDO, 0, 0);
+			// Only perform undo if we can undo and it's not a redo state
+			if (SendMessage(hwndEdit, EM_CANUNDO, 0, 0)) {
+				SendMessage(hwndEdit, WM_UNDO, 0, 0);
+				g_bLastWasUndo = TRUE;
+			}
+			return 0;
+		case IDM_EDIT_REDO:
+			// Only perform redo if last operation was undo and we can still undo
+			if (g_bLastWasUndo && SendMessage(hwndEdit, EM_CANUNDO, 0, 0)) {
+				SendMessage(hwndEdit, WM_UNDO, 0, 0);
+				g_bLastWasUndo = FALSE;
+			}
 			return 0;
 		case IDM_EDIT_COPY:
 			SendMessage(hwndEdit, WM_COPY, 0, 0);
 			return 0;
 		case IDM_EDIT_CUT:
 			SendMessage(hwndEdit, WM_CUT, 0, 0);
+			ResetUndoState();
 			return 0;
 		case IDM_EDIT_PASTE:
 			SendMessage(hwndEdit, WM_PASTE, 0, 0);
+			ResetUndoState();
 			return 0;
 		case IDM_EDIT_DEL:
 			SendMessage(hwndEdit, WM_CLEAR, 0, 0);
+			ResetUndoState();
 			return 0;
 		case IDM_EDIT_SELECTALL:
 			SelectAllText(hwndEdit);
@@ -376,6 +397,39 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 		return 0;
 		break;
+
+	case WM_INITMENUPOPUP:
+		{
+			HMENU hMenu = (HMENU)wParam;
+			HMENU hEditMenu = GetSubMenu(GetMenu(hWnd), 1); // Edit menu is typically the second menu (index 1)
+			
+			if (hMenu == hEditMenu) {
+				// Check undo/redo availability
+				BOOL canUndo = SendMessage(hwndEdit, EM_CANUNDO, 0, 0);
+				
+				// Enable Undo if we can undo and it's not in redo state
+				BOOL enableUndo = canUndo && !g_bLastWasUndo;
+				EnableMenuItem(hMenu, IDM_EDIT_UNDO, MF_BYCOMMAND | (enableUndo ? MF_ENABLED : MF_GRAYED));
+				
+				// Enable Redo if last operation was undo and we can still undo (meaning there's something to redo)
+				BOOL enableRedo = g_bLastWasUndo && canUndo;
+				EnableMenuItem(hMenu, IDM_EDIT_REDO, MF_BYCOMMAND | (enableRedo ? MF_ENABLED : MF_GRAYED));
+				
+				// Check if there's a selection for cut/copy/delete
+				DWORD selStart, selEnd;
+				SendMessage(hwndEdit, EM_GETSEL, (WPARAM)&selStart, (LPARAM)&selEnd);
+				BOOL hasSelection = (selStart != selEnd);
+				EnableMenuItem(hMenu, IDM_EDIT_CUT, MF_BYCOMMAND | (hasSelection ? MF_ENABLED : MF_GRAYED));
+				EnableMenuItem(hMenu, IDM_EDIT_COPY, MF_BYCOMMAND | (hasSelection ? MF_ENABLED : MF_GRAYED));
+				EnableMenuItem(hMenu, IDM_EDIT_DEL, MF_BYCOMMAND | (hasSelection ? MF_ENABLED : MF_GRAYED));
+				
+				// Check if clipboard has text for paste
+				BOOL canPaste = IsClipboardFormatAvailable(CF_TEXT) || IsClipboardFormatAvailable(CF_UNICODETEXT);
+				EnableMenuItem(hMenu, IDM_EDIT_PASTE, MF_BYCOMMAND | (canPaste ? MF_ENABLED : MF_GRAYED));
+			}
+		}
+		return 0;
+
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
 
@@ -387,5 +441,10 @@ VOID InitStrRes(){
 	LoadString(hInst, IDC_MYNOTEPAD, szWindowClass, MAX_LOADSTRING);
 	LoadString(hInst, IDS_APP_TITLE, szAppTitle, MAX_LOADSTRING);
 	LoadString(hInst, IDS_FAILED_TO_INIT_COMM_CTL, szFailedToLoadCommCtl, MAX_LOADSTRING);
+}
+
+// Reset undo state when new edit operations occur
+VOID ResetUndoState() {
+	g_bLastWasUndo = FALSE;
 }
 
