@@ -1,19 +1,18 @@
-// stdafx.h : 标准系统包含文件的包含文件，
-// 或是经常使用但不常更改的
-// 特定于项目的包含文件
+// stdafx.h : 锟斤拷准系统锟斤拷锟斤拷锟侥硷拷锟侥帮拷锟斤拷锟侥硷拷锟斤拷
+// 锟斤拷锟角撅拷锟斤拷使锟矫碉拷锟斤拷锟斤拷锟斤拷锟侥碉拷
+// 锟截讹拷锟斤拷锟斤拷目锟侥帮拷锟斤拷锟侥硷拷
 //
 
 #pragma once
 
 #include "targetver.h"
-
-#define WIN32_LEAN_AND_MEAN             //  从 Windows 头文件中排除极少使用的信息
-// Windows 头文件: 
+#define WIN32_LEAN_AND_MEAN             //  锟斤拷 Windows 头锟侥硷拷锟斤拷锟脚筹拷锟斤拷锟斤拷使锟矫碉拷锟斤拷息
+// Windows 头锟侥硷拷: 
 #include <windows.h>
 #include <windowsx.h>
-#include <commdlg.h>
 #include <CommCtrl.h>
-// C 运行时头文件
+#include <commdlg.h>
+// C 锟斤拷锟斤拷时头锟侥硷拷
 #include <stdlib.h>
 #include <malloc.h>
 #include <memory.h>
@@ -21,4 +20,4 @@
 #include <assert.h>
 
 
-// TODO:  在此处引用程序需要的其他头文件
+// TODO:  锟节此达拷锟斤拷锟矫筹拷锟斤拷锟斤拷要锟斤拷锟斤拷锟斤拷头锟侥硷拷

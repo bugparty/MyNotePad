@@ -1,20 +1,94 @@
 #include "stdafx.h"
 #include "Print.h"
-
+#pragma comment(lib, "comdlg32.lib")   // 或在链接器里手动添加
 // 打印设置的全局变量
 static PRINTDLG g_printDlg = {0};
 static PAGESETUPDLG g_pageSetupDlg = {0};
 static BOOL g_bPrintInitialized = FALSE;
+static UINT CALLBACK PrintHookProc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
+
+#define IDC_PREVIEW_CANVAS  9001   // 预览子窗体 ID
+
+
+BOOL DrawPrintPreview(HDC hPrnDC, HWND hEdit, int pageNo, HWND hPreviewWnd)
+{
+	PAINTSTRUCT ps; HDC hDC = BeginPaint(hPreviewWnd, &ps);
+
+	// 把打印 DC 转成屏幕缩放的 memory-bitmap，逻辑与 PrintTextPage 一致
+	RECT rc; GetClientRect(hPreviewWnd, &rc);
+	int dpiX = GetDeviceCaps(hPrnDC, LOGPIXELSX);
+	int dpiY = GetDeviceCaps(hPrnDC, LOGPIXELSY);
+
+	int pw = MulDiv(850, dpiX, 100);            // 8.5×11 inch → 设备 px
+	int ph = MulDiv(1100, dpiY, 100);
+
+	HDC mem = CreateCompatibleDC(hPrnDC);
+	HBITMAP bmp = CreateCompatibleBitmap(hPrnDC, pw, ph);
+	HBITMAP old = (HBITMAP)SelectObject(mem, bmp);
+	FillRect(mem, &RECT{ 0,0,pw,ph }, (HBRUSH)(COLOR_WINDOW + 1));
+
+	// ——复用你已有的排版函数——
+	PrintTextPage(mem, hEdit,
+		(pageNo - 1) * INT_MAX, (pageNo - 1) * INT_MAX, pageNo);
+
+	// 缩放到预览窗口
+	int dstW = rc.right; int dstH = MulDiv(ph, dstW, pw);
+	if (dstH > rc.bottom) { dstH = rc.bottom; dstW = MulDiv(pw, dstH, ph); }
+	int x = (rc.right - dstW) / 2; int y = (rc.bottom - dstH) / 2;
+	SetStretchBltMode(hDC, HALFTONE);
+	StretchBlt(hDC, x, y, dstW, dstH, mem, 0, 0, pw, ph, SRCCOPY);
+
+	SelectObject(mem, old); DeleteObject(bmp); DeleteDC(mem);
+	EndPaint(hPreviewWnd, &ps);
+	return TRUE;
+}
+
+static UINT CALLBACK PrintHookProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	LPPRINTDLG  pdx = (LPPRINTDLG)GetWindowLongPtr(hDlg, DWLP_USER);
+	int w = -1;
+	switch (uMsg)
+	{
+	case WM_INITDIALOG:
+		pdx = (LPPRINTDLG)lParam;
+		SetWindowLongPtr(hDlg, DWLP_USER, (LONG_PTR)pdx);
+
+		// 在右侧创建一个带边框的 STATIC 作为预览画布
+		RECT rc; GetClientRect(hDlg, &rc);
+		w = rc.right / 3;
+		CreateWindowEx(WS_EX_CLIENTEDGE, TEXT("STATIC"), NULL,
+			WS_CHILD | WS_VISIBLE | SS_OWNERDRAW,
+			rc.right - w - 8, 8, w, rc.bottom - 16,
+			hDlg, (HMENU)IDC_PREVIEW_CANVAS,
+			(HINSTANCE)GetWindowLongPtr(hDlg, GWLP_HINSTANCE), NULL);
+		return TRUE;
+
+	case WM_DRAWITEM:
+		if (((LPDRAWITEMSTRUCT)lParam)->CtlID == IDC_PREVIEW_CANVAS) {
+			HWND hEdit = (HWND)pdx->lCustData;
+			DrawPrintPreview(pdx->hDC, hEdit, 1, ((LPDRAWITEMSTRUCT)lParam)->hwndItem);
+			return TRUE;
+		}
+		break;
+	}
+	return FALSE;
+}
 
 // 初始化打印设置
-VOID InitializePrintSettings() {
+VOID InitializePrintSettings(HWND hEdit) {
 	if (g_bPrintInitialized) return;
 	
 	// 初始化打印对话框结构
 	ZeroMemory(&g_printDlg, sizeof(g_printDlg));
 	g_printDlg.lStructSize = sizeof(g_printDlg);
+
 	g_printDlg.Flags = PD_RETURNDC | PD_ALLPAGES | PD_USEDEVMODECOPIES | PD_NOPAGENUMS | PD_HIDEPRINTTOFILE | PD_NOSELECTION;
-	
+	//if (hEdit != NULL) {
+	//	g_printDlg.Flags |=  PD_ENABLEPRINTHOOK;
+	//	g_printDlg.lpfnPrintHook = PrintHookProc;             // ★
+	//	g_printDlg.lCustData = (LPARAM)hEdit;               // ★ 让钩子拿到编辑框
+	//}
+
 	// 初始化页面设置对话框结构
 	ZeroMemory(&g_pageSetupDlg, sizeof(g_pageSetupDlg));
 	g_pageSetupDlg.lStructSize = sizeof(g_pageSetupDlg);
@@ -29,7 +103,7 @@ VOID InitializePrintSettings() {
 
 // 显示打印对话框并执行打印
 VOID ShowPrintDialog(HWND hWnd, HWND hEdit) {
-	InitializePrintSettings();
+	InitializePrintSettings(hEdit);
 	
 	// 检查是否有文本内容
 	int textLength = GetWindowTextLength(hEdit);
@@ -58,7 +132,7 @@ VOID ShowPrintDialog(HWND hWnd, HWND hEdit) {
 
 // 显示页面设置对话框
 VOID ShowPageSetupDialog(HWND hWnd) {
-	InitializePrintSettings();
+	InitializePrintSettings(NULL);
 	
 	g_pageSetupDlg.hwndOwner = hWnd;
 	

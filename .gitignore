@@ -29,3 +29,4 @@ MyNotePad/Release/*
 *.opensdf
 .vs/MyNotePad/*
 dist/
+MyNotePad/MyNotePad.aps
