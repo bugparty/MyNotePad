@@ -13,9 +13,16 @@
 #define FONT_STRIKEOUT     _T("FontStrikeOut")
 #define FONT_CHARSET       _T("FontCharSet")
 
+// Word Wrap registry constants
+#define WORDWRAP_ENABLED   _T("WordWrapEnabled")
+
 // Font registry functions
 VOID LoadFontFromRegistry(LOGFONT* pLogFont);
 VOID SaveFontToRegistry(const LOGFONT* pLogFont);
+
+// Word Wrap registry functions  
+VOID LoadWordWrapFromRegistry(BOOL* pWordWrap);
+VOID SaveWordWrapToRegistry(BOOL bWordWrap);
 
 // General registry utility functions
 BOOL CreateRegistryKey(HKEY hKey, LPCTSTR lpSubKey);

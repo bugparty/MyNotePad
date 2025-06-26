@@ -11,7 +11,8 @@
 // Global Variables: 
 HINSTANCE hInst;								// Current instance
 HWND hWnd;										// Current window handle
-TCHAR szAppTitle[MAX_LOADSTRING];					// The title bar text
+HWND hwndEdit;									// Edit control handle
+TCHAR szAppTitle[MAX_LOADSTRING];				// The title bar text
 TCHAR szWindowClass[MAX_LOADSTRING];			// the main window class name
 TCHAR szFailedToLoadCommCtl[MAX_LOADSTRING];
 
@@ -146,7 +147,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	static int cxChar, cyChar, cxClient, cyClient;
 	static int iVertPos;
 	static SCROLLINFO si;
-	static HWND hwndEdit;
 	switch (message)
 	{
 	case WM_COMMAND:
@@ -212,6 +212,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case IDM_FORMAT_FONT:
 			ShowFontDialog(hWnd, hwndEdit);
 			return 0;
+		case IDM_FORMAT_AUTOWRAP:
+			ToggleWordWrap(hWnd, hwndEdit);
+			return 0;
 		case IDM_HELP_ABOUT:
 			DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
 			break;
@@ -235,7 +238,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		GetTextMetrics(hdc, &tm);
 		ReleaseDC(hWnd, hdc);
 
+		// 初始化 Word Wrap 设置
+		InitializeWordWrap();
+		
 		CreateEditControl(hwndEdit, hWnd);
+		
+		// 初始化菜单状态
+		UpdateMenuWordWrap(hWnd);
+		
 		return 0;
 
 		break;

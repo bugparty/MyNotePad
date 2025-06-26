@@ -27,3 +27,10 @@ VOID TestSelection(HWND hEdit);
 // 文本选择相关函数
 VOID SelectAllText(HWND hEdit);
 VOID TestSelectAllFunction(HWND hEdit);
+
+// Word Wrap 相关函数
+VOID InitializeWordWrap();
+VOID ToggleWordWrap(HWND hWnd, HWND hEdit);
+BOOL IsWordWrapEnabled();
+VOID SetWordWrap(HWND hWnd, HWND hEdit, BOOL bEnable);
+VOID UpdateMenuWordWrap(HWND hWnd);

@@ -205,3 +205,22 @@ BOOL WriteRegistryDWORD(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpValueName, DWORD 
 	
 	return result;
 }
+
+// Load Word Wrap setting from registry
+VOID LoadWordWrapFromRegistry(BOOL* pWordWrap) {
+	if (!pWordWrap) return;
+	
+	// Default to Word Wrap disabled
+	*pWordWrap = FALSE;
+	
+	DWORD dwWordWrap = 0;
+	if (ReadRegistryDWORD(HKEY_CURRENT_USER, REGISTRY_KEY_PATH, WORDWRAP_ENABLED, &dwWordWrap)) {
+		*pWordWrap = (dwWordWrap != 0) ? TRUE : FALSE;
+	}
+}
+
+// Save Word Wrap setting to registry
+VOID SaveWordWrapToRegistry(BOOL bWordWrap) {
+	DWORD dwWordWrap = bWordWrap ? 1 : 0;
+	WriteRegistryDWORD(HKEY_CURRENT_USER, REGISTRY_KEY_PATH, WORDWRAP_ENABLED, dwWordWrap);
+}

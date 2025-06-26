@@ -27,6 +27,9 @@ static BOOL g_bWholeWord = FALSE;
 static LOGFONT g_currentLogFont = {0};
 static BOOL g_bFontInitialized = FALSE;
 
+// Word Wrap related global variables
+static BOOL g_bWordWrapEnabled = FALSE;
+
 // Original edit control window procedure
 static WNDPROC g_pOriginalEditProc = NULL;
 
@@ -96,12 +99,20 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 }
 // Creation of main EditControl with enhanced appearance
 VOID CreateEditControl(HWND &hwndEdit, HWND hWnd){
+	// 根据 Word Wrap 状态设置编辑控件样式
+	DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE |
+		ES_LEFT | ES_WANTRETURN | ES_AUTOVSCROLL;
+	
+	if (!g_bWordWrapEnabled) {
+		// 如果不启用 Word Wrap，添加水平滚动条
+		dwStyle |= WS_HSCROLL | ES_AUTOHSCROLL;
+	}
+	
 	hwndEdit = CreateWindowEx(
 		WS_EX_CLIENTEDGE,   /* enhanced border style              */
 		_T("EDIT"),         /* predefined class                  */
 		NULL,               /* no window title                   */
-		WS_CHILD | WS_VISIBLE | WS_HSCROLL | ES_MULTILINE |
-		ES_LEFT | WS_VSCROLL | ES_WANTRETURN | ES_AUTOVSCROLL | ES_AUTOHSCROLL,
+		dwStyle,
 		0, 0, 300, 220,     /* set size in WM_SIZE message       */
 		hWnd,               /* parent window                     */
 		(HMENU)ID_EDIT,     /* edit control ID                   */
@@ -831,4 +842,131 @@ VOID TestSelectAllFunction(HWND hEdit) {
 	SelectAllText(hEdit);
 }
 
-// 显示打印对话框并执行打印
+// Word Wrap 相关函数实现
+
+// 初始化 Word Wrap 设置
+VOID InitializeWordWrap() {
+	LoadWordWrapFromRegistry(&g_bWordWrapEnabled);
+}
+
+// 切换 Word Wrap 状态
+VOID ToggleWordWrap(HWND hWnd, HWND hEdit) {
+	g_bWordWrapEnabled = !g_bWordWrapEnabled;
+	SetWordWrap(hWnd, hEdit, g_bWordWrapEnabled);
+	UpdateMenuWordWrap(hWnd);
+}
+
+// 获取当前 Word Wrap 状态
+BOOL IsWordWrapEnabled() {
+	return g_bWordWrapEnabled;
+}
+
+// 设置 Word Wrap 状态
+VOID SetWordWrap(HWND hWnd, HWND hEdit, BOOL bEnable) {
+	if (!hEdit) return;
+	
+	// 保存当前文本内容
+	int textLength = GetWindowTextLength(hEdit);
+	LPTSTR pszText = NULL;
+	
+	if (textLength > 0) {
+		pszText = (LPTSTR)LocalAlloc(LMEM_ZEROINIT, (textLength + 1) * sizeof(TCHAR));
+		if (pszText) {
+			GetWindowText(hEdit, pszText, textLength + 1);
+		}
+	}
+	
+	// 保存当前选择位置
+	DWORD dwStart, dwEnd;
+	SendMessage(hEdit, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
+	
+	// 保存当前第一行可见行号
+	int nFirstVisibleLine = SendMessage(hEdit, EM_GETFIRSTVISIBLELINE, 0, 0);
+	
+	// 获取当前窗口位置和大小
+	RECT rcEdit;
+	GetWindowRect(hEdit, &rcEdit);
+	ScreenToClient(hWnd, (LPPOINT)&rcEdit);
+	ScreenToClient(hWnd, (LPPOINT)&rcEdit + 1);
+	
+	// 销毁当前编辑控件
+	DestroyWindow(hEdit);
+	
+	// 创建新的编辑控件，根据 Word Wrap 状态设置样式
+	DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL;
+	
+	if (!bEnable) {
+		// 如果不启用 Word Wrap，添加水平滚动条
+		dwStyle |= WS_HSCROLL | ES_AUTOHSCROLL;
+	}
+	
+	// 创建新的编辑控件
+	HWND hNewEdit = CreateWindowEx(
+		WS_EX_CLIENTEDGE,
+		_T("EDIT"),
+		_T(""),
+		dwStyle,
+		rcEdit.left, rcEdit.top,
+		rcEdit.right - rcEdit.left, rcEdit.bottom - rcEdit.top,
+		hWnd,
+		(HMENU)ID_EDIT,
+		GetModuleHandle(NULL),
+		NULL
+	);
+	
+	if (hNewEdit) {
+		// 更新全局句柄
+		extern HWND hwndEdit;
+		hwndEdit = hNewEdit;
+		
+		// 应用字体设置
+		if (g_bFontInitialized) {
+			ApplyFontToEdit(hNewEdit, &g_currentLogFont);
+		} else {
+			InitializeDefaultFont();
+			ApplyFontToEdit(hNewEdit, &g_currentLogFont);
+		}
+		
+		// 应用现代样式
+		ApplyModernEditStyling(hNewEdit);
+		
+		// 恢复文本内容
+		if (pszText) {
+			SetWindowText(hNewEdit, pszText);
+			LocalFree(pszText);
+		}
+		
+		// 恢复选择位置
+		SendMessage(hNewEdit, EM_SETSEL, dwStart, dwEnd);
+		
+		// 恢复滚动位置到第一行可见行
+		if (nFirstVisibleLine > 0) {
+			SendMessage(hNewEdit, EM_LINESCROLL, 0, nFirstVisibleLine);
+		}
+		
+		// 设置焦点
+		SetFocus(hNewEdit);
+	}
+	
+	g_bWordWrapEnabled = bEnable;
+	
+	// 保存设置到注册表
+	SaveWordWrapToRegistry(g_bWordWrapEnabled);
+}
+
+// 更新菜单中的 Word Wrap 状态
+VOID UpdateMenuWordWrap(HWND hWnd) {
+	HMENU hMenu = GetMenu(hWnd);
+	if (hMenu) {
+		HMENU hFormatMenu = GetSubMenu(hMenu, 2); // Format 菜单是第3个（索引2）
+		if (hFormatMenu) {
+			UINT uFlags = MF_BYCOMMAND;
+			if (g_bWordWrapEnabled) {
+				uFlags |= MF_CHECKED;
+			} else {
+				uFlags |= MF_UNCHECKED;
+			}
+			CheckMenuItem(hFormatMenu, IDM_FORMAT_AUTOWRAP, uFlags);
+		}
+	}
+}
