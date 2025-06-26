@@ -1,45 +1,62 @@
 ﻿========================================================================
-    WIN32 应用程序：MyNotePad 项目概述
+    WIN32 APPLICATION: MyNotePad Project Overview
 ========================================================================
 
-应用程序向导已为您创建了此 MyNotePad 应用程序。
+The Application Wizard has created this MyNotePad application for you.
 
-本文件概要介绍组成 MyNotePad 应用程序的每个文件的内容。
+This file contains a summary of what you will find in each of the files that
+make up your MyNotePad application.
 
 
 MyNotePad.vcxproj
-    这是使用应用程序向导生成的 VC++ 项目的主项目文件，其中包含生成该文件的 Visual C++ 的版本信息，以及有关使用应用程序向导选择的平台、配置和项目功能的信息。
+    This is the main project file for VC++ projects generated using an Application Wizard.
+    It contains information about the version of Visual C++ that generated the file, and
+    information about the platforms, configurations, and project features selected with the
+    Application Wizard.
 
 MyNotePad.vcxproj.filters
-    这是使用“应用程序向导”生成的 VC++ 项目筛选器文件。它包含有关项目文件与筛选器之间的关联信息。在 IDE 中，通过这种关联，在特定节点下以分组形式显示具有相似扩展名的文件。例如，“.cpp”文件与“源文件”筛选器关联。
+    This is the filter file for VC++ projects generated using an Application Wizard. 
+    It contains information about the association between the files in your project 
+    and the filters. This association is used in the IDE to show grouping of files with
+    similar extensions under a specific node (for e.g. ".cpp" files are associated with the
+    "Source Files" filter).
 
 MyNotePad.cpp
-    这是主应用程序源文件。
+    This is the main application source file.
 
 /////////////////////////////////////////////////////////////////////////////
-应用程序向导创建了下列资源：
+The Application Wizard has created the following resources:
 
 MyNotePad.rc
-    这是程序使用的所有 Microsoft Windows 资源的列表。它包括 RES 子目录中存储的图标、位图和光标。此文件可以直接在 Microsoft Visual C++ 中进行编辑。
+    This is a listing of all of the Microsoft Windows resources that the
+    program uses. It includes the icons, bitmaps, and cursors that are stored
+    in the RES subdirectory. This file can be directly edited in Microsoft
+    Visual C++.
 
 Resource.h
-    这是标准头文件，可用于定义新的资源 ID。Microsoft Visual C++ 将读取并更新此文件。
+    This is the standard header file, which defines new resource IDs.
+    Microsoft Visual C++ reads and updates this file.
 
 MyNotePad.ico
-    这是用作应用程序图标 (32x32) 的图标文件。此图标包括在主资源文件 MyNotePad.rc 中。
+    This is an icon file, which is used as the application's icon (32x32).
+    This icon is included by the main resource file MyNotePad.rc.
 
 small.ico
-    这是一个图标文件，其中包含应用程序的图标的较小版本 (16x16)。此图标包括在主资源文件 MyNotePad.rc 中。
+    This is an icon file, which contains a smaller version (16x16)
+    of the application's icon. This icon is included by the main resource file
+    MyNotePad.rc.
 
 /////////////////////////////////////////////////////////////////////////////
-其他标准文件:
+Other standard files:
 
 StdAfx.h, StdAfx.cpp
-    这些文件用于生成名为 MyNotePad.pch 的预编译头 (PCH) 文件和名为 StdAfx.obj 的预编译类型文件。
+    These files are used to build a precompiled header (PCH) file
+    named MyNotePad.pch and a precompiled types file named StdAfx.obj.
 
 /////////////////////////////////////////////////////////////////////////////
-其他注释:
+Other notes:
 
-应用程序向导使用“TODO:”注释来指示应添加或自定义的源代码部分。
+AppWizard uses "TODO:" comments to indicate parts of the source code you
+should add to or customize.
 
 /////////////////////////////////////////////////////////////////////////////

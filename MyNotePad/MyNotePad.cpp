@@ -1,4 +1,4 @@
-﻿// MyNotePad.cpp : 定义应用程序的入口点。
+﻿// MyNotePad.cpp : Defines the entry point for the application.
 //
 
 #include "stdafx.h"
@@ -7,15 +7,15 @@
 
 #define MAX_LOADSTRING 100
 
-// 全局变量: 
-HINSTANCE hInst;								// 当前实例
-HWND hWnd;										//当前窗口句柄
+// Global Variables: 
+HINSTANCE hInst;								// Current instance
+HWND hWnd;										// Current window handle
 TCHAR szAppTitle[MAX_LOADSTRING];					// The title bar text
 TCHAR szWindowClass[MAX_LOADSTRING];			// the main window class name
 TCHAR szFailedToLoadCommCtl[MAX_LOADSTRING];
 
 
-// 此代码模块中包含的函数的前向声明: 
+// Forward declarations of functions included in this code module: 
 ATOM				MyRegisterClass(HINSTANCE hInstance);
 BOOL				InitInstance(HINSTANCE, int);
 LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -32,15 +32,15 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
 
- 	// TODO:  在此放置代码。
+ 	// TODO: Place code here.
 	MSG msg;
 	HACCEL hAccelTable;
 
-	// 初始化全局字符串
+	// Initialize global strings
 	InitStrRes();
 	MyRegisterClass(hInstance);
 
-	// 执行应用程序初始化: 
+	// Perform application initialization: 
 	if (!InitInstance (hInstance, nCmdShow))
 	{
 		return FALSE;
@@ -48,7 +48,7 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 
 	hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_MYNOTEPAD));
 
-	// 主消息循环: 
+	// Main message loop: 
 	while (GetMessage(&msg, NULL, 0, 0))
 	{
 		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
@@ -64,9 +64,9 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 
 
 //
-//  函数:  MyRegisterClass()
+//  FUNCTION: MyRegisterClass()
 //
-//  目的:  注册窗口类。
+//  PURPOSE: Registers the window class.
 //
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
@@ -90,19 +90,19 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 }
 
 //
-//   函数:  InitInstance(HINSTANCE, int)
+//   FUNCTION: InitInstance(HINSTANCE, int)
 //
-//   目的:  保存实例句柄并创建主窗口
+//   PURPOSE: Saves instance handle and creates main window
 //
-//   注释: 
+//   COMMENTS:
 //
-//        在此函数中，我们在全局变量中保存实例句柄并
-//        创建和显示主程序窗口。
+//        In this function, we save the instance handle in a global variable and
+//        create and display the main program window.
 //
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
 
-   hInst = hInstance; // 将实例句柄存储在全局变量中
+   hInst = hInstance; // Store instance handle in our global variable
 
    hWnd = CreateWindow(szWindowClass, szAppTitle, WS_OVERLAPPEDWINDOW,
       CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
@@ -127,13 +127,13 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 }
 
 //
-//  函数:  WndProc(HWND, UINT, WPARAM, LPARAM)
+//  FUNCTION: WndProc(HWND, UINT, WPARAM, LPARAM)
 //
-//  目的:    处理主窗口的消息。
+//  PURPOSE:    Processes messages for the main window.
 //
-//  WM_COMMAND	- 处理应用程序菜单
-//  WM_PAINT	- 绘制主窗口
-//  WM_DESTROY	- 发送退出消息并返回
+//  WM_COMMAND	- process the application menu
+//  WM_PAINT	- Paint the main window
+//  WM_DESTROY	- post a quit message and return
 //
 //
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -158,7 +158,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 		wmId = LOWORD(wParam);
 		wmEvent = HIWORD(wParam);
-		// 分析菜单选择: 
+		// Parse the menu selections: 
 		switch (wmId)
 		{
 		case IDM_FILE_OPEN:
@@ -235,7 +235,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);
-		// TODO:  在此添加任意绘图代码...
+		// TODO: Add any drawing code here...
 
 
 		EndPaint(hWnd, &ps);

@@ -22,7 +22,7 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 	}
 	return (INT_PTR)FALSE;
 }
-// 主EditControl的创建
+// Creation of main EditControl
 VOID CreateEditControl(HWND &hwndEdit, HWND hWnd){
 	hwndEdit = CreateWindow(
 		_T("EDIT"),     /* predefined class                  */
