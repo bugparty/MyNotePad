@@ -110,31 +110,31 @@ jobs:
         }
         
         # Create README for the release
-        $readmeContent = @"
-# MyNotePad $version
-
-## Files Included
-- MyNotePad.exe - Main application
-- MyNotePad.pdb - Debug symbols (optional)
-
-## System Requirements
-- Windows 7 or later
-- .NET Framework (if required)
-
-## Features
-- Text editing with modern UI
-- Find and Replace functionality
-- Print support with proper font handling
-- File encoding detection (UTF-8, GBK, ANSI, etc.)
-- Cross-platform line ending support
-
-## Usage
-Simply run MyNotePad.exe to start the application.
-
-Built on: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss UTC')
-Commit: ${{ github.sha }}
-"@
-        $readmeContent | Out-File -FilePath "$packageName\README.txt" -Encoding UTF8
+        $readmeLines = @(
+          "# MyNotePad $version",
+          "",
+          "## Files Included",
+          "- MyNotePad.exe - Main application",
+          "- MyNotePad.pdb - Debug symbols (optional)",
+          "",
+          "## System Requirements",
+          "- Windows 7 or later",
+          "- .NET Framework (if required)",
+          "",
+          "## Features",
+          "- Text editing with modern UI",
+          "- Find and Replace functionality", 
+          "- Print support with proper font handling",
+          "- File encoding detection (UTF-8, GBK, ANSI, etc.)",
+          "- Cross-platform line ending support",
+          "",
+          "## Usage",
+          "Simply run MyNotePad.exe to start the application.",
+          "",
+          "Built on: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss UTC')",
+          "Commit: ${{ github.sha }}"
+        )
+        $readmeLines | Out-File -FilePath "$packageName\README.txt" -Encoding UTF8
         
         # Create ZIP
         Compress-Archive -Path "$packageName\*" -DestinationPath "$packageName.zip"
