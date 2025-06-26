@@ -110,7 +110,7 @@ jobs:
         }
         
         # Create README for the release
-        @"
+        $readmeContent = @"
 # MyNotePad $version
 
 ## Files Included
@@ -133,7 +133,8 @@ Simply run MyNotePad.exe to start the application.
 
 Built on: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss UTC')
 Commit: ${{ github.sha }}
-"@ | Out-File -FilePath "$packageName\README.txt" -Encoding UTF8
+"@
+        $readmeContent | Out-File -FilePath "$packageName\README.txt" -Encoding UTF8
         
         # Create ZIP
         Compress-Archive -Path "$packageName\*" -DestinationPath "$packageName.zip"
