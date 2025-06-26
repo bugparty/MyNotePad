@@ -1,0 +1,180 @@
+name: Build and Release MyNotePad
+
+on:
+  push:
+    branches: [ main, master, develop ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main, master ]
+
+env:
+  SOLUTION_FILE: MyNotePad.sln
+  BUILD_CONFIGURATION: Release
+  BUILD_PLATFORM: Win32
+
+jobs:
+  build:
+    name: Build MyNotePad
+    runs-on: windows-2022
+    
+    steps:
+    - name: 📥 Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+      with:
+        msbuild-architecture: x86
+
+    - name: 📦 Restore Dependencies
+      run: |
+        # For older projects, we might not need NuGet restore
+        echo "Checking for packages.config or project dependencies..."
+        if (Test-Path "packages.config") {
+          nuget restore ${{env.SOLUTION_FILE}}
+        } else {
+          echo "No NuGet packages to restore"
+        }
+
+    - name: 🏗️ Build Project
+      run: |
+        echo "Building MyNotePad..."
+        msbuild ${{env.SOLUTION_FILE}} `
+          /p:Configuration=${{env.BUILD_CONFIGURATION}} `
+          /p:Platform=${{env.BUILD_PLATFORM}} `
+          /p:OutDir="..\Build\" `
+          /m `
+          /verbosity:minimal
+
+    - name: 📋 Verify Build Output
+      run: |
+        echo "=== Build Output Verification ==="
+        
+        # Check multiple possible output locations
+        $possiblePaths = @(
+          "Build\MyNotePad.exe",
+          "Release\MyNotePad.exe", 
+          "MyNotePad\Release\MyNotePad.exe",
+          "x86\Release\MyNotePad.exe"
+        )
+        
+        $found = $false
+        foreach ($path in $possiblePaths) {
+          if (Test-Path $path) {
+            echo "✅ Found MyNotePad.exe at: $path"
+            $file = Get-Item $path
+            echo "   Size: $($file.Length) bytes"
+            echo "   Modified: $($file.LastWriteTime)"
+            $found = $true
+            
+            # Copy to a standard location for upload
+            New-Item -ItemType Directory -Force -Path "dist"
+            Copy-Item $path "dist\MyNotePad.exe"
+            if (Test-Path ($path -replace "\.exe$", ".pdb")) {
+              Copy-Item ($path -replace "\.exe$", ".pdb") "dist\MyNotePad.pdb"
+            }
+            break
+          }
+        }
+        
+        if (-not $found) {
+          echo "❌ MyNotePad.exe not found in any expected location"
+          echo "Directory contents:"
+          Get-ChildItem -Recurse -Include "*.exe" | ForEach-Object { echo "  $($_.FullName)" }
+          exit 1
+        }
+
+    - name: 📤 Upload Build Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: MyNotePad-${{ runner.os }}-${{ github.run_number }}
+        path: |
+          dist/MyNotePad.exe
+          dist/MyNotePad.pdb
+        retention-days: 30
+
+    - name: 🏷️ Create Release Package (on tag)
+      if: startsWith(github.ref, 'refs/tags/v')
+      run: |
+        echo "Creating release package..."
+        $version = "${{ github.ref_name }}"
+        $packageName = "MyNotePad-${version}-Windows"
+        
+        # Create release directory
+        New-Item -ItemType Directory -Force -Path $packageName
+        
+        # Copy files
+        Copy-Item "dist\MyNotePad.exe" "$packageName\"
+        if (Test-Path "dist\MyNotePad.pdb") {
+          Copy-Item "dist\MyNotePad.pdb" "$packageName\"
+        }
+        
+        # Create README for the release
+        @"
+# MyNotePad $version
+
+## Files Included
+- MyNotePad.exe - Main application
+- MyNotePad.pdb - Debug symbols (optional)
+
+## System Requirements
+- Windows 7 or later
+- .NET Framework (if required)
+
+## Features
+- Text editing with modern UI
+- Find and Replace functionality
+- Print support with proper font handling
+- File encoding detection (UTF-8, GBK, ANSI, etc.)
+- Cross-platform line ending support
+
+## Usage
+Simply run MyNotePad.exe to start the application.
+
+Built on: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss UTC')
+Commit: ${{ github.sha }}
+"@ | Out-File -FilePath "$packageName\README.txt" -Encoding UTF8
+        
+        # Create ZIP
+        Compress-Archive -Path "$packageName\*" -DestinationPath "$packageName.zip"
+        echo "✅ Created $packageName.zip"
+
+    - name: 🚀 Upload Release Asset
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: MyNotePad-${{ github.ref_name }}-Windows.zip
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Optional: Build debug version for development
+  build-debug:
+    name: Build Debug Version
+    runs-on: windows-2022
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main')
+    
+    steps:
+    - name: 📥 Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+
+    - name: 🏗️ Build Debug
+      run: |
+        msbuild ${{env.SOLUTION_FILE}} `
+          /p:Configuration=Debug `
+          /p:Platform=${{env.BUILD_PLATFORM}} `
+          /m
+
+    - name: 📤 Upload Debug Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: MyNotePad-Debug-${{ github.run_number }}
+        path: |
+          Debug/MyNotePad.exe
+          Debug/MyNotePad.pdb
+        retention-days: 7

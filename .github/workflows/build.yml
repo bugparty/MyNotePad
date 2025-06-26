@@ -1,0 +1,99 @@
+name: Build MyNotePad
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  release:
+    types: [ published ]
+
+env:
+  # Path to the solution file relative to the root of the project.
+  SOLUTION_FILE_PATH: MyNotePad.sln
+  
+  # Configuration type to build.
+  BUILD_CONFIGURATION: Release
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Restore NuGet packages
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      run: nuget restore ${{env.SOLUTION_FILE_PATH}}
+
+    - name: Build Solution
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      # Add additional options to the MSBuild command line here (like platform or verbosity level).
+      run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} /p:Platform=Win32 ${{env.SOLUTION_FILE_PATH}}
+
+    - name: Test executable exists
+      run: |
+        if (Test-Path "Release\MyNotePad.exe") {
+          Write-Output "✅ MyNotePad.exe built successfully"
+          Get-Item "Release\MyNotePad.exe" | Select-Object Name, Length, LastWriteTime
+        } else {
+          Write-Error "❌ MyNotePad.exe not found"
+          exit 1
+        }
+
+    - name: Upload Release Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: MyNotePad-Windows-${{ github.sha }}
+        path: |
+          Release/MyNotePad.exe
+          Release/MyNotePad.pdb
+        retention-days: 90
+
+    - name: Upload Debug Artifacts (if available)
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: MyNotePad-Debug-${{ github.sha }}
+        path: |
+          Debug/MyNotePad.exe
+          Debug/MyNotePad.pdb
+        retention-days: 30
+      continue-on-error: true
+
+  # Create a release when a tag is pushed
+  release:
+    needs: build
+    runs-on: windows-latest
+    if: github.event_name == 'release'
+    permissions:
+      contents: write
+
+    steps:
+    - name: Download Release Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: MyNotePad-Windows-${{ github.sha }}
+        path: ./release-files
+
+    - name: Create ZIP package
+      run: |
+        Compress-Archive -Path ".\release-files\*" -DestinationPath "MyNotePad-Windows.zip"
+        Get-Item "MyNotePad-Windows.zip" | Select-Object Name, Length
+
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./MyNotePad-Windows.zip
+        asset_name: MyNotePad-Windows.zip
+        asset_content_type: application/zip
