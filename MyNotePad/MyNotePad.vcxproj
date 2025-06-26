@@ -84,6 +84,7 @@
     <ClInclude Include="AboutDialog.h" />
     <ClInclude Include="Document.h" />
     <ClInclude Include="Encoding.h" />
+    <ClInclude Include="FileDialog.h" />
     <ClInclude Include="MyNotePad.h" />
     <ClInclude Include="Print.h" />
     <ClInclude Include="Resource.h" />
@@ -98,6 +99,7 @@
     <ClCompile Include="AboutDialog.cpp" />
     <ClCompile Include="Dialog.cpp" />
     <ClCompile Include="Encoding.cpp" />
+    <ClCompile Include="FileDialog.cpp" />
     <ClCompile Include="MyNotePad.cpp" />
     <ClCompile Include="Print.cpp" />
     <ClCompile Include="Registry.cpp" />

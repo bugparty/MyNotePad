@@ -11,9 +11,7 @@ INT_PTR CALLBACK GoToDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 VOID CreateEditControl(HWND &hwndEdit, HWND hWnd);
 VOID ApplyModernEditStyling(HWND hwndEdit);
 VOID CleanupEditResources();
-VOID OpenDialogFileOpen(HWND hWnd, HWND hEdit);
-VOID OpenDialogFileSaveAs(HWND hWnd, HWND hEdit);
-VOID OpenDialogFileSave(HWND hWnd, HWND hEdit);
+
 VOID ShowFindDialog(HWND hWnd, HWND hEdit);
 VOID FindNext(HWND hEdit);
 VOID ShowGoToDialog(HWND hWnd, HWND hEdit);

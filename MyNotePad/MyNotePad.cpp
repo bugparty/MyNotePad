@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "MyNotePad.h"
 #include "Dialog.h"
+#include "FileDialog.h"
 #include "Print.h"
 #include "StatusBar.h"
 #include "AboutDialog.h"
@@ -29,6 +30,7 @@ LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
 VOID				InitStrRes();
 VOID				ResetUndoState();
+VOID				ProcessCommandLine(LPTSTR lpCmdLine);
 
 #define nEditID 40001
 
@@ -38,7 +40,6 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
                      _In_ int       nCmdShow)
 {
 	UNREFERENCED_PARAMETER(hPrevInstance);
-	UNREFERENCED_PARAMETER(lpCmdLine);
 
  	// TODO: Place code here.
 	MSG msg;
@@ -53,6 +54,9 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 	{
 		return FALSE;
 	}
+
+	// Process command line arguments to open file if specified
+	ProcessCommandLine(lpCmdLine);
 
 	hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_MYNOTEPAD));
 
@@ -446,5 +450,49 @@ VOID InitStrRes(){
 // Reset undo state when new edit operations occur
 VOID ResetUndoState() {
 	g_bLastWasUndo = FALSE;
+}
+
+// Process command line arguments
+VOID ProcessCommandLine(LPTSTR lpCmdLine) {
+	if (!lpCmdLine || lpCmdLine[0] == '\0') {
+		return; // No command line arguments
+	}
+	
+	// Remove leading and trailing whitespace
+	LPTSTR pStart = lpCmdLine;
+	while (*pStart == ' ' || *pStart == '\t') {
+		pStart++;
+	}
+	
+	if (*pStart == '\0') {
+		return; // Only whitespace
+	}
+	
+	// Copy to a local buffer for processing
+	TCHAR szFileName[MAX_PATH];
+	_tcscpy_s(szFileName, MAX_PATH, pStart);
+	
+	// Remove trailing whitespace
+	int len = _tcslen(szFileName);
+	while (len > 0 && (szFileName[len - 1] == ' ' || szFileName[len - 1] == '\t')) {
+		szFileName[--len] = '\0';
+	}
+	
+	// Handle quoted filenames
+	if (szFileName[0] == '"') {
+		// Remove opening quote
+		_tcscpy_s(szFileName, MAX_PATH, szFileName + 1);
+		len = _tcslen(szFileName);
+		
+		// Remove closing quote if present
+		if (len > 0 && szFileName[len - 1] == '"') {
+			szFileName[len - 1] = '\0';
+		}
+	}
+	
+	// Try to open the file
+	if (szFileName[0] != '\0') {
+		OpenFileFromCommandLine(hwndEdit, szFileName);
+	}
 }
 
