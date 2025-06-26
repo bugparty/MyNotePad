@@ -165,12 +165,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			OpenDialogFileOpen(hWnd,hwndEdit);
 			return 0;
 		case IDM_FILE_SAVE:
-			
+			OpenDialogFileSave(hWnd, hwndEdit);
 			return 0;
 		case IDM_FILE_NEW:
 
 		case IDM_FILE_SAVEAS:
-			OpenDialogFileSaveAs(hWnd);
+			OpenDialogFileSaveAs(hWnd, hwndEdit);
 			return 0;
 		case IDM_FILE_PRINT:
 			MessageBeep(0);
@@ -186,6 +186,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			return 0;
 		case IDM_EDIT_PASTE:
 			SendMessage(hwndEdit, WM_PASTE, 0, 0);
+			return 0;
+		case IDM_EDIT_DEL:
+			SendMessage(hwndEdit, WM_CLEAR, 0, 0);
+			return 0;
+		case IDM_EDIT_FIND:
+			ShowFindDialog(hWnd, hwndEdit);
 			return 0;
 		case IDM_HELP_ABOUT:
 			DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
@@ -225,6 +231,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		si.fMask = SIF_RANGE | SIF_PAGE;
 		si.nMin = 0;
 		si.nMax = 50;
+		if (cyChar == 0) {
+			return 0;
+		}
 		si.nPage = cyClient / cyChar;
 
 		//SetScrollInfo should be the last line because it will endup the callback immedately

@@ -56,3 +56,51 @@ VOID DO_OPEN_FILE(HWND hEdit, LPTSTR filename){
 	free_buff();
 
 }
+
+VOID DO_SAVE_FILE(HWND hEdit, LPTSTR filename){
+	// Get the length of text in the edit control
+	int textLength = Edit_GetTextLength(hEdit);
+	if (textLength == 0) {
+		// Nothing to save
+		return;
+	}
+
+	// Allocate buffer for the text (add 1 for null terminator)
+	LPTSTR textBuffer = (LPTSTR)LocalAlloc(LMEM_ZEROINIT, (textLength + 1) * sizeof(TCHAR));
+	if (!textBuffer) {
+		OutputDebugString(_T("Failed to allocate memory for save buffer"));
+		return;
+	}
+
+	// Get the text from edit control
+	Edit_GetText(hEdit, textBuffer, textLength + 1);
+
+	// Create/Open file for writing
+	HANDLE hFile = CreateFile(filename,
+		GENERIC_WRITE,
+		0,
+		NULL,
+		CREATE_ALWAYS,  // This will overwrite existing file
+		FILE_ATTRIBUTE_NORMAL,
+		NULL);
+
+	if (hFile == INVALID_HANDLE_VALUE) {
+		OutputDebugString(_T("Save File Failed"));
+		Error2Msgbox(GetLastError());
+		LocalFree(textBuffer);
+		return;
+	}
+
+	// Write the text to file
+	DWORD bytesWritten;
+	BOOL writeResult = WriteFile(hFile, textBuffer, textLength * sizeof(TCHAR), &bytesWritten, NULL);
+	
+	if (!writeResult) {
+		OutputDebugString(_T("Write to File Failed"));
+		Error2Msgbox(GetLastError());
+	}
+
+	// Clean up
+	CloseHandle(hFile);
+	LocalFree(textBuffer);
+}
