@@ -2,7 +2,7 @@
 
 A modern Windows Notepad application with enhanced editing features and print support.
 
-![Build Status](https://github.com/YOUR_USERNAME/MyNotePad/workflows/Build%20and%20Release%20MyNotePad/badge.svg)
+![Build Status](https://github.com/bugparty/MyNotePad/workflows/Build%20and%20Release%20MyNotePad/badge.svg)
 
 ## ✨ Features
 
