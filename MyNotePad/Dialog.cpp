@@ -14,6 +14,7 @@ static BOOL g_bHasFileName = FALSE;
 // Global variables for Find functionality
 static HWND g_hFindDialog = NULL;
 static HWND g_hReplaceDialog = NULL;
+static HWND g_hGoToDialog = NULL;
 static HWND g_hEditControl = NULL;
 static TCHAR g_szFindText[256] = {0};
 static TCHAR g_szReplaceText[256] = {0};
@@ -317,6 +318,38 @@ BOOL FindTextInEdit(HWND hEdit, LPCTSTR findText, BOOL matchCase, BOOL wholeWord
 	return FALSE;
 }
 
+// Helper function to go to a specific line in edit control
+BOOL GoToLine(HWND hEdit, int lineNumber) {
+	// Get total number of lines
+	int totalLines = SendMessage(hEdit, EM_GETLINECOUNT, 0, 0);
+	
+	// Validate line number (1-based)
+	if (lineNumber < 1 || lineNumber > totalLines) {
+		return FALSE;
+	}
+	
+	// Convert to 0-based line index
+	int lineIndex = lineNumber - 1;
+	
+	// Get character index of the beginning of the line
+	int charIndex = SendMessage(hEdit, EM_LINEINDEX, lineIndex, 0);
+	if (charIndex == -1) {
+		return FALSE;
+	}
+	
+	// Set cursor position to the beginning of the line
+	SendMessage(hEdit, EM_SETSEL, charIndex, charIndex);
+	
+	// Scroll to make sure the line is visible
+	SendMessage(hEdit, EM_SCROLLCARET, 0, 0);
+	
+	// Set focus to the edit control
+	SetFocus(hEdit);
+	SetForegroundWindow(GetParent(hEdit));
+	
+	return TRUE;
+}
+
 // Helper function to replace text in edit control
 BOOL ReplaceTextInEdit(HWND hEdit, LPCTSTR findText, LPCTSTR replaceText, BOOL matchCase, BOOL wholeWord, BOOL replaceAll) {
 	int replacedCount = 0;
@@ -603,6 +636,83 @@ VOID ShowReplaceDialog(HWND hWnd, HWND hEdit) {
 		ShowWindow(g_hReplaceDialog, SW_SHOW);
 		// Ensure edit control keeps focus
 		SetFocus(hEdit);
+	}
+}
+
+// Go To Dialog Procedure
+INT_PTR CALLBACK GoToDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
+	UNREFERENCED_PARAMETER(lParam);
+	
+	switch (message) {
+	case WM_INITDIALOG:
+		// Set focus to the line number text box
+		SetFocus(GetDlgItem(hDlg, IDC_GOTO_LINE_NUMBER));
+		return (INT_PTR)FALSE; // Return FALSE since we set focus manually
+
+	case WM_COMMAND:
+		switch (LOWORD(wParam)) {
+		case IDC_GOTO_GO:
+		case IDOK:
+			{
+				// Get the line number from the edit control
+				TCHAR szLineNumber[32];
+				GetDlgItemText(hDlg, IDC_GOTO_LINE_NUMBER, szLineNumber, 31);
+				
+				if (_tcslen(szLineNumber) == 0) {
+					MessageBox(hDlg, _T("Please enter a line number."), _T("Go To Line"), MB_OK | MB_ICONINFORMATION);
+					return (INT_PTR)TRUE;
+				}
+
+				// Convert to integer
+				int lineNumber = _ttoi(szLineNumber);
+				if (lineNumber <= 0) {
+					MessageBox(hDlg, _T("Please enter a valid line number."), _T("Go To Line"), MB_OK | MB_ICONINFORMATION);
+					return (INT_PTR)TRUE;
+				}
+
+				// Go to the specified line
+				if (GoToLine(g_hEditControl, lineNumber)) {
+					// Close dialog on success
+					g_hGoToDialog = NULL;
+					EndDialog(hDlg, LOWORD(wParam));
+				} else {
+					MessageBox(hDlg, _T("Line number is out of range."), _T("Go To Line"), MB_OK | MB_ICONINFORMATION);
+				}
+			}
+			return (INT_PTR)TRUE;
+
+		case IDC_GOTO_CLOSE:
+		case IDCANCEL:
+			g_hGoToDialog = NULL;
+			EndDialog(hDlg, LOWORD(wParam));
+			return (INT_PTR)TRUE;
+		}
+		break;
+
+	case WM_CLOSE:
+		g_hGoToDialog = NULL;
+		EndDialog(hDlg, 0);
+		return (INT_PTR)TRUE;
+	}
+	
+	return (INT_PTR)FALSE;
+}
+
+// Show Go To Dialog
+VOID ShowGoToDialog(HWND hWnd, HWND hEdit) {
+	g_hEditControl = hEdit;
+	
+	// If dialog is already open, just bring it to front
+	if (g_hGoToDialog && IsWindow(g_hGoToDialog)) {
+		SetForegroundWindow(g_hGoToDialog);
+		return;
+	}
+
+	// Create and show the dialog as a modal dialog
+	g_hGoToDialog = CreateDialog(hInst, MAKEINTRESOURCE(IDD_GOTO_DIALOG), hWnd, GoToDialog);
+	if (g_hGoToDialog) {
+		ShowWindow(g_hGoToDialog, SW_SHOW);
+		SetFocus(GetDlgItem(g_hGoToDialog, IDC_GOTO_LINE_NUMBER));
 	}
 }
 

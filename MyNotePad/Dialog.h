@@ -15,6 +15,8 @@ VOID OpenDialogFileSaveAs(HWND hWnd, HWND hEdit);
 VOID OpenDialogFileSave(HWND hWnd, HWND hEdit);
 VOID ShowFindDialog(HWND hWnd, HWND hEdit);
 VOID FindNext(HWND hEdit);
+VOID ShowGoToDialog(HWND hWnd, HWND hEdit);
+BOOL GoToLine(HWND hEdit, int lineNumber);
 VOID ShowReplaceDialog(HWND hWnd, HWND hEdit);
 VOID TestSelection(HWND hEdit);
 
