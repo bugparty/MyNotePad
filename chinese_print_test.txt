@@ -1,0 +1,24 @@
+中文打印测试文档
+==================
+
+第一行：This is English text for testing printing functionality.
+第二行：这是中文文本，用于测试打印功能中的字符宽度计算。
+第三行：Mixed content 中英文混合 123ABC 测试内容验证效果。
+
+长行测试：
+这是一个非常长的中文行，用于测试在打印时是否能够正确处理中文字符的宽度，确保中文字符不会因为宽度计算错误而显示得过于狭窄，影响可读性。这个测试行包含了大量的中文字符，应该能够在打印时正确换行。
+
+This is a very long English line to test whether the printing function can correctly handle the width of English characters and ensure proper line wrapping when the text exceeds the printable width of the page. This test line contains many English words and should wrap correctly during printing.
+
+特殊字符测试：
+中文标点符号：，。？！；：""''（）【】《》〈〉
+English punctuation: ,.?!;:"'()[]<>
+数字和符号：1234567890 ~!@#$%^&*()_+-={}|[]\:";'<>?,./
+
+表格测试：
+名称    年龄    城市        备注
+张三    25     北京        工程师
+李四    30     上海        设计师
+王五    28     广州        产品经理
+
+结束行：打印测试完成，请检查中英文字符的显示效果。

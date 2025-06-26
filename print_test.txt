@@ -1,0 +1,34 @@
+这是 MyNotePad 打印功能测试文档
+=====================================
+
+第一段：这是一个用于测试打印功能的示例文档。
+它包含多行文本，用于验证打印是否能正确处理换行符和分页。
+
+第二段：Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+
+第三段：中文测试内容：
+这里是中文内容，用于测试中文字符的打印效果。
+包括一些特殊符号：！@#￥%……&*（）——+｜｛｝【】：""；''，。？
+
+第四段：数字和英文混合测试：
+Line 1: Testing numbers 123456789 and letters ABCDEFG
+Line 2: Mixed content 中英文混合 123abc 测试内容
+Line 3: Special chars ~!@#$%^&*()_+{}|:"<>?
+
+第五段：长行测试 - 这是一个很长很长的行，用于测试打印时是否能正确处理超长行的情况，看看是否会出现换行或者截断的问题。
+
+第六段：多行测试
+行 1
+行 2
+行 3
+行 4
+行 5
+
+第七段：空行测试
+
+
+（上面有两个空行）
+
+结束段：打印功能测试完成。

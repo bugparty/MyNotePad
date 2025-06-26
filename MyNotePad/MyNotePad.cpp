@@ -173,7 +173,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			OpenDialogFileSaveAs(hWnd, hwndEdit);
 			return 0;
 		case IDM_FILE_PRINT:
-			MessageBeep(0);
+			ShowPrintDialog(hWnd, hwndEdit);
+			return 0;
+		case IDM_FILE_PRINT_SETTING:
+			ShowPageSetupDialog(hWnd);
 			return 0;
 		case IDM_EDIT_UNDO:
 			SendMessage(hwndEdit, WM_UNDO, 0, 0);
@@ -189,6 +192,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			return 0;
 		case IDM_EDIT_DEL:
 			SendMessage(hwndEdit, WM_CLEAR, 0, 0);
+			return 0;
+		case IDM_EDIT_SELECTALL:
+			SelectAllText(hwndEdit);
 			return 0;
 		case IDM_EDIT_FIND:
 			ShowFindDialog(hWnd, hwndEdit);

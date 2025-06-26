@@ -16,3 +16,15 @@ VOID OpenDialogFileSave(HWND hWnd, HWND hEdit);
 VOID ShowFindDialog(HWND hWnd, HWND hEdit);
 VOID ShowReplaceDialog(HWND hWnd, HWND hEdit);
 VOID TestSelection(HWND hEdit);
+
+// 文本选择相关函数
+VOID SelectAllText(HWND hEdit);
+VOID TestSelectAllFunction(HWND hEdit);
+
+// 打印相关函数
+VOID ShowPrintDialog(HWND hWnd, HWND hEdit);
+VOID ShowPageSetupDialog(HWND hWnd);
+BOOL PrintTextDocument(HWND hWnd, HWND hEdit, HDC hPrinterDC);
+VOID CalculateTextMetrics(HDC hDC, TEXTMETRIC* tm, int* linesPerPage, int* printableWidth);
+int CalculateLineLength(HDC hDC, LPCTSTR text, int maxWidth);
+BOOL PrintTextPage(HDC hDC, HWND hEdit, int startLine, int endLine, int pageNumber);

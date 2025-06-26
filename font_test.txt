@@ -1,0 +1,19 @@
+打印测试文档
+=============
+
+第一行：测试字体大小和行间距
+第二行：This is English text for comparison
+第三行：中英文混合 Mixed Content 测试
+
+正常段落：
+这是一个正常的段落，用于测试打印时的字体大小是否合适，行间距是否正常。应该看起来清晰易读，没有过多的空白行间距。
+
+English paragraph:
+This is a normal paragraph to test if the font size is appropriate when printing and if the line spacing is normal. It should look clear and readable without excessive blank line spacing.
+
+短行测试：
+行1
+行2
+行3
+
+结束。
