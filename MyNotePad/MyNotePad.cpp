@@ -6,6 +6,7 @@
 #include "Dialog.h"
 #include "Print.h"
 #include "StatusBar.h"
+#include "AboutDialog.h"
 
 #define MAX_LOADSTRING 100
 

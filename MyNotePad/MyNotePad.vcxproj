@@ -81,6 +81,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AboutDialog.h" />
     <ClInclude Include="Document.h" />
     <ClInclude Include="Encoding.h" />
     <ClInclude Include="MyNotePad.h" />
@@ -94,6 +95,7 @@
     <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AboutDialog.cpp" />
     <ClCompile Include="Dialog.cpp" />
     <ClCompile Include="Encoding.cpp" />
     <ClCompile Include="MyNotePad.cpp" />

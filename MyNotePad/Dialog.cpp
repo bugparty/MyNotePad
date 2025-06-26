@@ -102,25 +102,6 @@ LRESULT CALLBACK EditControlSubclassProc(HWND hWnd, UINT message, WPARAM wParam,
 	return result;
 }
 
-// "关于"框的消息处理程序。
-INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
-{
-	UNREFERENCED_PARAMETER(lParam);
-	switch (message)
-	{
-	case WM_INITDIALOG:
-		return (INT_PTR)TRUE;
-
-	case WM_COMMAND:
-		if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
-		{
-			EndDialog(hDlg, LOWORD(wParam));
-			return (INT_PTR)TRUE;
-		}
-		break;
-	}
-	return (INT_PTR)FALSE;
-}
 // Creation of main EditControl with enhanced appearance
 VOID CreateEditControl(HWND &hwndEdit, HWND hWnd){
 	// 根据 Word Wrap 状态设置编辑控件样式
