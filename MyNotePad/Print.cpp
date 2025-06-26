@@ -27,9 +27,14 @@ BOOL DrawPrintPreview(HDC hPrnDC, HWND hEdit, int pageNo, HWND hPreviewWnd)
 	HBITMAP old = (HBITMAP)SelectObject(mem, bmp);
 	FillRect(mem, &RECT{ 0,0,pw,ph }, (HBRUSH)(COLOR_WINDOW + 1));
 
+	TEXTMETRIC tm;  int lpp, printableW;
+	CalculateTextMetrics(hPrnDC, &tm, &lpp, &printableW);
+
+	int totalLines = (int)SendMessage(hEdit, EM_GETLINECOUNT, 0, 0);
+	int startLine = (pageNo - 1) * lpp;
+	int endLine = min(startLine + lpp - 1, totalLines - 1);
 	// ——复用你已有的排版函数——
-	PrintTextPage(mem, hEdit,
-		(pageNo - 1) * INT_MAX, (pageNo - 1) * INT_MAX, pageNo);
+	PrintTextPage(mem, hEdit, startLine, endLine, pageNo);   
 
 	// 缩放到预览窗口
 	int dstW = rc.right; int dstH = MulDiv(ph, dstW, pw);
@@ -41,6 +46,25 @@ BOOL DrawPrintPreview(HDC hPrnDC, HWND hEdit, int pageNo, HWND hPreviewWnd)
 	SelectObject(mem, old); DeleteObject(bmp); DeleteDC(mem);
 	EndPaint(hPreviewWnd, &ps);
 	return TRUE;
+}
+
+static HDC MakeTempPrinterDC(const PRINTDLG* pdx)
+{
+	if (pdx->hDC) return pdx->hDC;                // 对话框关闭后才会有
+	if (!pdx->hDevMode || !pdx->hDevNames) return NULL;
+
+	DEVNAMES* dn = (DEVNAMES*)GlobalLock(pdx->hDevNames);
+	DEVMODE* dm = (DEVMODE*)GlobalLock(pdx->hDevMode);
+
+	LPCWSTR drv = (LPCWSTR)dn + dn->wDriverOffset;
+	LPCWSTR dev = (LPCWSTR)dn + dn->wDeviceOffset;
+	LPCWSTR out = (LPCWSTR)dn + dn->wOutputOffset;
+
+	HDC hDC = CreateDCW(drv, dev, out, dm);       // 临时打印 DC
+
+	GlobalUnlock(pdx->hDevNames);
+	GlobalUnlock(pdx->hDevMode);
+	return hDC;                                   // 别忘了稍后 DeleteDC
 }
 
 static UINT CALLBACK PrintHookProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -66,7 +90,12 @@ static UINT CALLBACK PrintHookProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 	case WM_DRAWITEM:
 		if (((LPDRAWITEMSTRUCT)lParam)->CtlID == IDC_PREVIEW_CANVAS) {
 			HWND hEdit = (HWND)pdx->lCustData;
-			DrawPrintPreview(pdx->hDC, hEdit, 1, ((LPDRAWITEMSTRUCT)lParam)->hwndItem);
+			HDC hPrn = MakeTempPrinterDC(pdx);
+			if (hPrn) {
+				HWND hEdit = (HWND)pdx->lCustData;
+				DrawPrintPreview(hPrn, hEdit, 1, ((LPDRAWITEMSTRUCT)lParam)->hwndItem);
+				if (hPrn != pdx->hDC) DeleteDC(hPrn);     // 只删临时的
+			}
 			return TRUE;
 		}
 		break;
@@ -83,11 +112,11 @@ VOID InitializePrintSettings(HWND hEdit) {
 	g_printDlg.lStructSize = sizeof(g_printDlg);
 
 	g_printDlg.Flags = PD_RETURNDC | PD_ALLPAGES | PD_USEDEVMODECOPIES | PD_NOPAGENUMS | PD_HIDEPRINTTOFILE | PD_NOSELECTION;
-	//if (hEdit != NULL) {
-	//	g_printDlg.Flags |=  PD_ENABLEPRINTHOOK;
-	//	g_printDlg.lpfnPrintHook = PrintHookProc;             // ★
-	//	g_printDlg.lCustData = (LPARAM)hEdit;               // ★ 让钩子拿到编辑框
-	//}
+	if (hEdit != NULL) {
+		g_printDlg.Flags |=  PD_ENABLEPRINTHOOK;
+		g_printDlg.lpfnPrintHook = PrintHookProc;             // ★
+		g_printDlg.lCustData = (LPARAM)hEdit;               // ★ 让钩子拿到编辑框
+	}
 
 	// 初始化页面设置对话框结构
 	ZeroMemory(&g_pageSetupDlg, sizeof(g_pageSetupDlg));
