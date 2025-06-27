@@ -6,8 +6,20 @@ A modern Windows Notepad application with enhanced editing features and print su
 
 ![My Notepad Screenshot](./Screenshot01.png)
 
+## 📋 Table of Contents
+
+- [Features](#-features)
+- [Downloads](#-downloads)
+- [Build Instructions](#️-build-instructions)
+- [Technical Details](#-technical-details)
+- [Contributing](#-contributing)
+- [License](#-license)
+- [Acknowledgments](#acknowledgments)
+
 
 ## ✨ Features
+
+**Fully implements all functionality of the classic Windows Notepad with modern enhancements.**
 
 ### 📝 Text Editing
 
@@ -35,6 +47,16 @@ A modern Windows Notepad application with enhanced editing features and print su
 - **Automatic Pagination** - Smart calculation of page layout and pagination
 - **Page Setup** - Support for margins and paper settings
 
+## 📦 Downloads
+
+### Download from Releases
+
+Visit the [Releases page](https://github.com/bugparty/MyNotePad/releases) to download the latest version.
+
+### Download from Artifacts
+
+After each build, you can download the latest build results from the Actions page.
+
 ## 🏗️ Build Instructions
 
 ### Local Build
@@ -47,11 +69,11 @@ A modern Windows Notepad application with enhanced editing features and print su
 
 #### Build Steps
 
-```bash
+```powershell
 # Clone the repository
 git clone https://github.com/bugparty/MyNotePad.git
 cd MyNotePad
- ./build.ps1
+./build.ps1
 ```
 
 ### Automated Build (GitHub Actions)
@@ -68,23 +90,13 @@ The project is configured with GitHub Actions for automated builds:
 1. **Development Push**: Pushing code to main branch triggers build and uploads artifacts
 2. **Create Release**: Creating git tags and releases automatically builds and attaches zip packages
 
-```bash
+```powershell
 # Create version tag
 git tag v1.0.0
 git push origin v1.0.0
 
 # Create Release on GitHub to trigger automatic build and file attachment
 ```
-
-## 📦 Downloads
-
-### Download from Releases
-
-Visit the [Releases page](https://github.com/bugparty/MyNotePad/releases) to download the latest version.
-
-### Download from Artifacts
-
-After each build, you can download the latest build results from the Actions page.
 
 ## 🔧 Technical Details
 
@@ -127,72 +139,9 @@ Issues and Pull Requests are welcome!
 - Follow Windows API naming conventions
 - Add appropriate error handling and memory management
 
-## 📝 Version History
-
-- **v1.0.0** - Initial release
-  - Basic text editing functionality
-  - Find and replace features
-  - File operations and encoding support
-  - Print functionality
-
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Microsoft - Windows API and development tools
-- GitHub - Code hosting and Actions service
-- Open source community - Various references and inspiration
-
-- **Text Editing**: Full text editing capabilities with support for common operations
-- **File Operations**:
-  - Open existing text files
-  - Save and Save As functionality
-  - Create new documents
-- **Edit Menu**: Standard editing operations including:
-  - Undo
-  - Copy, Cut, Paste
-  - Find text with options for case matching and whole word search
-  - Replace text with single and batch replace functionality
-- **Scrolling**: Vertical scrolling support for large documents
-- **Native Windows Integration**: Built using pure Win32 API for authentic Windows experience
-
-## Usage
-
-Run the compiled `MyNotePad.exe` to start the application. The interface closely mimics the classic Windows Notepad:
-
-- **File Menu**: New, Open, Save, Save As, Print, Exit
-- **Edit Menu**: Undo, Cut, Copy, Paste
-- **Help Menu**: About dialog
-
-## Implementation Highlights
-
-- **Win32 Window Management**: Custom window class registration and message handling
-- **Edit Control**: Uses Windows' built-in edit control for text editing functionality
-- **Scrolling**: Implements custom vertical scrolling with scroll bar management
-- **File I/O**: Native Windows file operations for opening and saving documents
-- **Resource Management**: Proper handling of Windows resources (DC, handles, etc.)
-
-## Code Features
-
-- Message-driven architecture using `WndProc` callback
-- Proper resource cleanup and memory management
-- Unicode support through TCHAR usage
-- Common Controls integration for enhanced UI elements
-
-## Contributing
-
-This project serves as an educational example of Win32 programming. Feel free to:
-
-- Report issues or bugs
-- Suggest improvements
-- Submit pull requests
-- Use as a reference for learning Win32 API programming
-
-## License
-
-This project is open source. Feel free to use, modify, and distribute according to your needs.
 
 ## Acknowledgments
 
