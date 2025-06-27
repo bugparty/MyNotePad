@@ -6,7 +6,7 @@ VOID DO_SAVE(TCHAR* filename);
 VOID DO_OPEN_FILE(HWND hEdit, LPTSTR filename);
 VOID DO_SAVE_FILE(HWND hEdit, LPTSTR filename);
 
-// 编码相关函数
+// Encoding related functions
 EncodingType GetCurrentEncoding();
 VOID SetCurrentEncoding(EncodingType encoding);
 LPCWSTR GetCurrentEncodingName();

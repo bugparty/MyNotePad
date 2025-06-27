@@ -41,8 +41,9 @@ LRESULT CALLBACK EditControlSubclassProc(HWND hWnd, UINT message, WPARAM wParam,
 	switch (message) {
 	case WM_GETDLGCODE:
 		{
-			// Tell the system we want to handle all keys, including Enter and Tab
-			return DLGC_WANTALLKEYS | DLGC_HASSETSEL | DLGC_WANTCHARS | DLGC_WANTARROWS;
+			// Tell the system we want to handle specific keys, but allow accelerators to pass through
+			// Don't use DLGC_WANTALLKEYS as it blocks accelerator keys like Ctrl+V, Ctrl+C, etc.
+			return DLGC_HASSETSEL | DLGC_WANTCHARS | DLGC_WANTARROWS;
 		}
 	
 	case WM_CHAR:
@@ -58,6 +59,58 @@ LRESULT CALLBACK EditControlSubclassProc(HWND hWnd, UINT message, WPARAM wParam,
 		}
 		
 	case WM_KEYDOWN:
+		// Handle special accelerator keys - send commands directly to main window
+		if ((GetKeyState(VK_CONTROL) & 0x8000)) {
+			// Ctrl key is pressed - handle common accelerator keys
+			switch (wParam) {
+			case 'V':  // Ctrl+V (Paste)
+				PostMessage(GetParent(hWnd), WM_COMMAND, IDM_EDIT_PASTE, 0);
+				return 0;
+			case 'C':  // Ctrl+C (Copy)
+				PostMessage(GetParent(hWnd), WM_COMMAND, IDM_EDIT_COPY, 0);
+				return 0;
+			case 'X':  // Ctrl+X (Cut)
+				PostMessage(GetParent(hWnd), WM_COMMAND, IDM_EDIT_CUT, 0);
+				return 0;
+			case 'A':  // Ctrl+A (Select All)
+				PostMessage(GetParent(hWnd), WM_COMMAND, IDM_EDIT_SELECTALL, 0);
+				return 0;
+			case 'Z':  // Ctrl+Z (Undo)
+				PostMessage(GetParent(hWnd), WM_COMMAND, IDM_EDIT_UNDO, 0);
+				return 0;
+			case 'Y':  // Ctrl+Y (Redo)
+				PostMessage(GetParent(hWnd), WM_COMMAND, IDM_EDIT_REDO, 0);
+				return 0;
+			case 'F':  // Ctrl+F (Find)
+				PostMessage(GetParent(hWnd), WM_COMMAND, IDM_EDIT_FIND, 0);
+				return 0;
+			case 'H':  // Ctrl+H (Replace)
+				PostMessage(GetParent(hWnd), WM_COMMAND, IDM_EDIT_REPLACE, 0);
+				return 0;
+			case 'G':  // Ctrl+G (Go To)
+				PostMessage(GetParent(hWnd), WM_COMMAND, IDM_EDIT_GOTO, 0);
+				return 0;
+			case 'N':  // Ctrl+N (New)
+				PostMessage(GetParent(hWnd), WM_COMMAND, IDM_FILE_NEW, 0);
+				return 0;
+			case 'O':  // Ctrl+O (Open)
+				PostMessage(GetParent(hWnd), WM_COMMAND, IDM_FILE_OPEN, 0);
+				return 0;
+			case 'S':  // Ctrl+S (Save)
+				// Check if Shift is also pressed for Save As
+				if (GetKeyState(VK_SHIFT) & 0x8000) {
+					PostMessage(GetParent(hWnd), WM_COMMAND, IDM_FILE_SAVEAS, 0);
+				} else {
+					PostMessage(GetParent(hWnd), WM_COMMAND, IDM_FILE_SAVE, 0);
+				}
+				return 0;
+			case 'P':  // Ctrl+P (Print)
+				PostMessage(GetParent(hWnd), WM_COMMAND, IDM_FILE_PRINT, 0);
+				return 0;
+			}
+		}
+		
+		// Handle navigation keys and update cursor position
 		if (wParam == VK_RETURN) {
 			// Let WM_CHAR handle enter key processing
 		} else if (wParam == VK_UP || wParam == VK_DOWN || wParam == VK_LEFT || wParam == VK_RIGHT ||
@@ -102,12 +155,12 @@ LRESULT CALLBACK EditControlSubclassProc(HWND hWnd, UINT message, WPARAM wParam,
 
 // Creation of main EditControl with enhanced appearance
 VOID CreateEditControl(HWND &hwndEdit, HWND hWnd){
-	// 根据 Word Wrap 状态设置编辑控件样式
+	// Set edit control style based on Word Wrap status
 	DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE |
 		ES_LEFT | ES_WANTRETURN | ES_AUTOVSCROLL;
 	
 	if (!g_bWordWrapEnabled) {
-		// 如果不启用 Word Wrap，添加水平滚动条
+		// If Word Wrap is not enabled, add horizontal scroll bar
 		dwStyle |= WS_HSCROLL | ES_AUTOHSCROLL;
 	}
 	
@@ -122,7 +175,7 @@ VOID CreateEditControl(HWND &hwndEdit, HWND hWnd){
 		(HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE),
 		NULL);              /* pointer not needed                */
 
-	// Subclass the edit control to handle Enter key properly
+	// Subclass the edit control for custom keyboard handling and appearance
 	if (hwndEdit) {
 		g_pOriginalEditProc = (WNDPROC)SetWindowLongPtr(hwndEdit, GWLP_WNDPROC, (LONG_PTR)EditControlSubclassProc);
 		
@@ -749,72 +802,70 @@ VOID TestSelection(HWND hEdit) {
 	UpdateWindow(hEdit);
 }
 
-// 文本选择相关函数实现
+// Text selection related function implementations
 VOID SelectAllText(HWND hEdit) {
 	if (!hEdit) return;
 	
-	// 选择所有文本 (0 到 -1 表示选择全部)
+	// Select all text (0 to -1 means select all)
 	SendMessage(hEdit, EM_SETSEL, 0, -1);
 	
-	// 确保编辑控件有焦点
+	// Ensure the edit control has focus
 	SetFocus(hEdit);
 }
 
 VOID TestSelectAllFunction(HWND hEdit) {
 	if (!hEdit) return;
 	
-	// 设置一些测试文本
-	SetWindowText(hEdit, _T("这是测试文本\r\n第二行\r\n第三行\r\n用于测试全选功能"));
+	// Set some test text
+	SetWindowText(hEdit, _T("This is test text\r\nSecond line\r\nThird line\r\nUsed to test the select all function"));
 	
-	// 延迟一下，然后执行全选
+	// Delay a bit, then execute select all
 	Sleep(500);
 	SelectAllText(hEdit);
 }
 
-// Time/Date 插入功能实现
+// Time/Date insert function implementation
 VOID InsertDateTime(HWND hEdit) {
 	if (!hEdit) return;
 	
-	// 获取当前系统时间
+	// Get the current system time
 	SYSTEMTIME st;
 	GetLocalTime(&st);
 	
-	// 格式化日期时间字符串（使用标准格式：年/月/日 时:分）
+	// Format the date and time string (using standard format: year/month/day hour:minute)
 	TCHAR szDateTime[128];
 	_stprintf_s(szDateTime, 128, _T("%04d/%02d/%02d %02d:%02d"), 
 		st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute);
 	
-	// 在当前光标位置插入日期时间
+	// Insert date and time at the current cursor position
 	SendMessage(hEdit, EM_REPLACESEL, TRUE, (LPARAM)szDateTime);
 	
-	// 确保编辑控件有焦点
+	// Ensure the edit control has focus
 	SetFocus(hEdit);
 }
 
-// Word Wrap 相关函数实现
-
-// 初始化 Word Wrap 设置
+// Initialize Word Wrap settings
 VOID InitializeWordWrap() {
 	LoadWordWrapFromRegistry(&g_bWordWrapEnabled);
 }
 
-// 切换 Word Wrap 状态
+// Toggle Word Wrap status
 VOID ToggleWordWrap(HWND hWnd, HWND hEdit) {
 	g_bWordWrapEnabled = !g_bWordWrapEnabled;
 	SetWordWrap(hWnd, hEdit, g_bWordWrapEnabled);
 	UpdateMenuWordWrap(hWnd);
 }
 
-// 获取当前 Word Wrap 状态
+// Get the current Word Wrap status
 BOOL IsWordWrapEnabled() {
 	return g_bWordWrapEnabled;
 }
 
-// 设置 Word Wrap 状态
+// Set Word Wrap status
 VOID SetWordWrap(HWND hWnd, HWND hEdit, BOOL bEnable) {
 	if (!hEdit) return;
 	
-	// 保存当前文本内容
+	// Save the current text content
 	int textLength = GetWindowTextLength(hEdit);
 	LPTSTR pszText = NULL;
 	
@@ -825,31 +876,31 @@ VOID SetWordWrap(HWND hWnd, HWND hEdit, BOOL bEnable) {
 		}
 	}
 	
-	// 保存当前选择位置
+	// Save the current selection position
 	DWORD dwStart, dwEnd;
 	SendMessage(hEdit, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
 	
-	// 保存当前第一行可见行号
+	// Save the current first visible line number
 	int nFirstVisibleLine = SendMessage(hEdit, EM_GETFIRSTVISIBLELINE, 0, 0);
 	
-	// 获取当前窗口位置和大小
+	// Get the current window position and size
 	RECT rcEdit;
 	GetWindowRect(hEdit, &rcEdit);
 	ScreenToClient(hWnd, (LPPOINT)&rcEdit);
 	ScreenToClient(hWnd, (LPPOINT)&rcEdit + 1);
 	
-	// 销毁当前编辑控件
+	// Destroy the current edit control
 	DestroyWindow(hEdit);
 	
-	// 创建新的编辑控件，根据 Word Wrap 状态设置样式
+	// Create a new edit control with style based on Word Wrap status
 	DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL;
 	
 	if (!bEnable) {
-		// 如果不启用 Word Wrap，添加水平滚动条
+		// If Word Wrap is not enabled, add horizontal scroll bar
 		dwStyle |= WS_HSCROLL | ES_AUTOHSCROLL;
 	}
 	
-	// 创建新的编辑控件
+	// Create the new edit control
 	HWND hNewEdit = CreateWindowEx(
 		WS_EX_CLIENTEDGE,
 		_T("EDIT"),
@@ -864,11 +915,11 @@ VOID SetWordWrap(HWND hWnd, HWND hEdit, BOOL bEnable) {
 	);
 	
 	if (hNewEdit) {
-		// 更新全局句柄
+		// Update global handle
 		extern HWND hwndEdit;
 		hwndEdit = hNewEdit;
 		
-		// 应用字体设置
+		// Apply font settings
 		if (g_bFontInitialized) {
 			ApplyFontToEdit(hNewEdit, &g_currentLogFont);
 		} else {
@@ -876,42 +927,42 @@ VOID SetWordWrap(HWND hWnd, HWND hEdit, BOOL bEnable) {
 			ApplyFontToEdit(hNewEdit, &g_currentLogFont);
 		}
 		
-		// 应用现代样式
+		// Apply modern styling
 		ApplyModernEditStyling(hNewEdit);
 		
-		// 恢复文本内容
+		// Restore text content
 		if (pszText) {
 			SetWindowText(hNewEdit, pszText);
 			LocalFree(pszText);
 		}
 		
-		// 恢复选择位置
+		// Restore selection position
 		SendMessage(hNewEdit, EM_SETSEL, dwStart, dwEnd);
 		
-		// 恢复滚动位置到第一行可见行
+		// Restore scroll position to the first visible line
 		if (nFirstVisibleLine > 0) {
 			SendMessage(hNewEdit, EM_LINESCROLL, 0, nFirstVisibleLine);
 		}
 		
-		// 设置焦点
+		// Set focus
 		SetFocus(hNewEdit);
 		
-		// 更新状态栏信息
+		// Update status bar information
 		UpdateCursorPosition(hNewEdit);
 		UpdateStatusBarWordWrap(bEnable);
 	}
 	
 	g_bWordWrapEnabled = bEnable;
 	
-	// 保存设置到注册表
+	// Save settings to the registry
 	SaveWordWrapToRegistry(g_bWordWrapEnabled);
 }
 
-// 更新菜单中的 Word Wrap 状态
+// Update the Word Wrap status in the menu
 VOID UpdateMenuWordWrap(HWND hWnd) {
 	HMENU hMenu = GetMenu(hWnd);
 	if (hMenu) {
-		HMENU hFormatMenu = GetSubMenu(hMenu, 2); // Format 菜单是第3个（索引2）
+		HMENU hFormatMenu = GetSubMenu(hMenu, 2); // Format menu is the 3rd one (index 2)
 		if (hFormatMenu) {
 			UINT uFlags = MF_BYCOMMAND;
 			if (g_bWordWrapEnabled) {
@@ -924,27 +975,25 @@ VOID UpdateMenuWordWrap(HWND hWnd) {
 	}
 }
 
-// 状态栏更新相关函数实现
-
-// 更新光标位置信息到状态栏
+// Update cursor position information to the status bar
 VOID UpdateCursorPosition(HWND hEdit) {
 	if (!hEdit || !IsWindow(hEdit)) {
 		return;
 	}
 	
-	// 获取当前光标位置
+	// Get the current cursor position
 	DWORD dwStart, dwEnd;
 	SendMessage(hEdit, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
 	
-	// 获取当前行号（从0开始）
+	// Get the current line number (starting from 0)
 	int lineNumber = SendMessage(hEdit, EM_LINEFROMCHAR, dwStart, 0);
 	
-	// 获取该行的起始字符位置
+	// Get the starting character position of the line
 	int lineStart = SendMessage(hEdit, EM_LINEINDEX, lineNumber, 0);
 	
-	// 计算列号（从0开始）
+	// Calculate the column number (starting from 0)
 	int columnNumber = dwStart - lineStart;
 	
-	// 更新状态栏（转换为从1开始的显示）
+	// Update the status bar (convert to display starting from 1)
 	UpdateStatusBarPosition(lineNumber + 1, columnNumber + 1);
 }

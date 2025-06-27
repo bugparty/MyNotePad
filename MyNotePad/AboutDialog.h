@@ -4,10 +4,7 @@
 #include <tchar.h>
 #include <winver.h>
 
-// 使用系统定义的 RTL_OSVERSIONINFOW
-// 现代 Windows SDK 已经包含此定义
-
-// About Dialog 相关函数声明
+// About Dialog related function declarations
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 VOID GetWindowsVersionString(LPTSTR lpszVersionString, DWORD dwBufferSize);
 VOID GetProductVersionInfo(LPTSTR lpszProductInfo, DWORD dwSize);

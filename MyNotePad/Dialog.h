@@ -22,19 +22,19 @@ VOID ApplyFontToEdit(HWND hEdit, LOGFONT* pLogFont);
 VOID ShowReplaceDialog(HWND hWnd, HWND hEdit);
 VOID TestSelection(HWND hEdit);
 
-// 文本选择相关函数
+// Text selection related functions
 VOID SelectAllText(HWND hEdit);
 VOID TestSelectAllFunction(HWND hEdit);
 
-// Time/Date 插入功能
+// Time/Date related functions
 VOID InsertDateTime(HWND hEdit);
 
-// Word Wrap 相关函数
+// Word Wrap related functions
 VOID InitializeWordWrap();
 VOID ToggleWordWrap(HWND hWnd, HWND hEdit);
 BOOL IsWordWrapEnabled();
 VOID SetWordWrap(HWND hWnd, HWND hEdit, BOOL bEnable);
 VOID UpdateMenuWordWrap(HWND hWnd);
 
-// 状态栏更新相关函数
+// Status bar related functions
 VOID UpdateCursorPosition(HWND hEdit);

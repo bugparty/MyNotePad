@@ -4,6 +4,9 @@ A modern Windows Notepad application with enhanced editing features and print su
 
 ![Build Status](https://github.com/bugparty/MyNotePad/workflows/Build%20and%20Release%20MyNotePad/badge.svg)
 
+![My Notepad Screenshot](./Screenshot01.png)
+
+
 ## ✨ Features
 
 ### 📝 Text Editing
@@ -46,14 +49,9 @@ A modern Windows Notepad application with enhanced editing features and print su
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/MyNotePad.git
+git clone https://github.com/bugparty/MyNotePad.git
 cd MyNotePad
-
-# Open solution in Visual Studio
-start MyNotePad.sln
-
-# Or build from command line
-msbuild MyNotePad.sln /p:Configuration=Release /p:Platform=Win32
+ ./build.ps1
 ```
 
 ### Automated Build (GitHub Actions)
@@ -82,7 +80,7 @@ git push origin v1.0.0
 
 ### Download from Releases
 
-Visit the [Releases page](https://github.com/YOUR_USERNAME/MyNotePad/releases) to download the latest version.
+Visit the [Releases page](https://github.com/bugparty/MyNotePad/releases) to download the latest version.
 
 ### Download from Artifacts
 
@@ -159,45 +157,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
   - Replace text with single and batch replace functionality
 - **Scrolling**: Vertical scrolling support for large documents
 - **Native Windows Integration**: Built using pure Win32 API for authentic Windows experience
-
-## Technical Details
-
-- **Language**: C++
-- **API**: Win32 API
-- **IDE**: Visual Studio (compatible with VS 2019/2022)
-- **Target Platform**: Windows
-
-## Project Structure
-
-```text
-MyNotePad/
-├── MyNotePad.sln          # Visual Studio solution file
-├── MyNotePad/
-│   ├── MyNotePad.cpp      # Main application entry point and window procedures
-│   ├── MyNotePad.h        # Main header file
-│   ├── Dialog.cpp/.h      # Dialog handling (File Open/Save)
-│   ├── Document.cpp/.h    # Document management
-│   ├── Utils.cpp/.h       # Utility functions
-│   ├── Resource.h         # Resource definitions
-│   ├── MyNotePad.rc       # Resource file
-│   └── res/              # Application icons and resources
-└── Debug/                # Build output directory
-```
-
-## Building the Project
-
-### Prerequisites
-
-- Visual Studio 2019 or later
-- Windows SDK
-- C++ development tools
-
-### Build Instructions
-
-1. Clone or download this repository
-2. Open `MyNotePad.sln` in Visual Studio
-3. Build the solution (Ctrl+Shift+B)
-4. The executable will be generated in the `Debug/` folder
 
 ## Usage
 

@@ -4,22 +4,22 @@
 
 #pragma comment(lib, "version.lib")
 
-// 定义 NTSTATUS 类型（如果未定义）
+// Define NTSTATUS type (if not defined)
 #ifndef NTSTATUS
 typedef LONG NTSTATUS;
 #endif
 
-// 使用 RtlGetVersion 获取真实的系统版本（避免兼容性模式影响）
+// Use RtlGetVersion to get the actual system version (avoiding compatibility mode effects)
 typedef NTSTATUS (WINAPI *PFN_RtlGetVersion)(PRTL_OSVERSIONINFOW);
 
-// 获取 Windows 版本字符串
+// Get Windows version string
  VOID GetWindowsVersionString(LPTSTR lpszVersionString, DWORD dwBufferSize) {
 	if (!lpszVersionString || dwBufferSize == 0) return;
 	
-	// 初始化为默认值
+	// Initialize to default value
 	_tcscpy_s(lpszVersionString, dwBufferSize, _T("Windows"));
 	
-	// 首先尝试使用 RtlGetVersion（更准确，不受应用程序兼容性影响）
+	// First try using RtlGetVersion (more accurate, not affected by application compatibility)
 	HMODULE hNtdll = GetModuleHandle(_T("ntdll.dll"));
 	if (hNtdll) {
 		PFN_RtlGetVersion pfnRtlGetVersion = (PFN_RtlGetVersion)GetProcAddress(hNtdll, "RtlGetVersion");
@@ -28,7 +28,7 @@ typedef NTSTATUS (WINAPI *PFN_RtlGetVersion)(PRTL_OSVERSIONINFOW);
 			osvi.dwOSVersionInfoSize = sizeof(osvi);
 			
 			if (pfnRtlGetVersion(&osvi) == 0) { // STATUS_SUCCESS
-				// 根据版本号确定 Windows 版本
+				// Determine Windows version based on version number
 				if (osvi.dwMajorVersion == 10) {
 					if (osvi.dwBuildNumber >= 22000) {
 						_tcscpy_s(lpszVersionString, dwBufferSize, _T("Windows 11"));
@@ -36,7 +36,7 @@ typedef NTSTATUS (WINAPI *PFN_RtlGetVersion)(PRTL_OSVERSIONINFOW);
 						_tcscpy_s(lpszVersionString, dwBufferSize, _T("Windows 10"));
 					}
 					
-					// 添加构建号
+					// Add build number
 					TCHAR szBuild[32];
 					_stprintf_s(szBuild, 32, _T(" (Build %d)"), osvi.dwBuildNumber);
 					_tcscat_s(lpszVersionString, dwBufferSize, szBuild);
@@ -79,24 +79,24 @@ typedef NTSTATUS (WINAPI *PFN_RtlGetVersion)(PRTL_OSVERSIONINFOW);
 					}
 				}
 				else {
-					// 对于未知版本，显示版本号
+					// For unknown versions, display the version number
 					_stprintf_s(lpszVersionString, dwBufferSize, _T("Windows NT %d.%d (Build %d)"), 
 						osvi.dwMajorVersion, osvi.dwMinorVersion, osvi.dwBuildNumber);
 				}
 				
-				// 添加产品版本信息（Home, Professional, etc.）
+				// Add product version information (Home, Professional, etc.)
 				TCHAR szProductInfo[64];
 				GetProductVersionInfo(szProductInfo, 64);
 				if (_tcslen(szProductInfo) > 0) {
 					_tcscat_s(lpszVersionString, dwBufferSize, szProductInfo);
 				}
 				
-				return; // 成功获取版本信息，直接返回
+				return; // Successfully got version info, return directly
 			}
 		}
 	}
 	
-	// 如果 RtlGetVersion 失败，尝试使用文件版本信息方法
+	// If RtlGetVersion fails, try using the file version info method
 	TCHAR szSystemPath[MAX_PATH];
 	GetSystemDirectory(szSystemPath, MAX_PATH);
 	_tcscat_s(szSystemPath, MAX_PATH, _T("\\kernel32.dll"));
@@ -116,7 +116,7 @@ typedef NTSTATUS (WINAPI *PFN_RtlGetVersion)(PRTL_OSVERSIONINFOW);
 					DWORD dwMinorVersion = LOWORD(pFileInfo->dwProductVersionMS);
 					DWORD dwBuildNumber = HIWORD(pFileInfo->dwProductVersionLS);
 					
-					// 根据版本号确定 Windows 版本
+					// Determine Windows version based on version number
 					if (dwMajorVersion == 10) {
 						if (dwBuildNumber >= 22000) {
 							_tcscpy_s(lpszVersionString, dwBufferSize, _T("Windows 11"));
@@ -124,7 +124,7 @@ typedef NTSTATUS (WINAPI *PFN_RtlGetVersion)(PRTL_OSVERSIONINFOW);
 							_tcscpy_s(lpszVersionString, dwBufferSize, _T("Windows 10"));
 						}
 						
-						// 添加构建号
+						// Add build number
 						TCHAR szBuild[32];
 						_stprintf_s(szBuild, 32, _T(" (Build %d)"), dwBuildNumber);
 						_tcscat_s(lpszVersionString, dwBufferSize, szBuild);
@@ -160,7 +160,7 @@ typedef NTSTATUS (WINAPI *PFN_RtlGetVersion)(PRTL_OSVERSIONINFOW);
 		}
 	}
 	
-	// 添加产品版本信息（Home, Professional, etc.）
+	// Add product version information (Home, Professional, etc.)
 	TCHAR szProductInfo[64];
 	GetProductVersionInfo(szProductInfo, 64);
 	if (_tcslen(szProductInfo) > 0) {
@@ -168,32 +168,32 @@ typedef NTSTATUS (WINAPI *PFN_RtlGetVersion)(PRTL_OSVERSIONINFOW);
 	}
 }
 
-// 将对话框居中显示在屏幕上
+// Center dialog on screen
 VOID CenterDialog(HWND hDlg) {
 	RECT rcDlg, rcScreen;
 	
-	// 获取对话框大小
+	// Get dialog size
 	GetWindowRect(hDlg, &rcDlg);
 	
-	// 获取屏幕大小
+	// Get screen size
 	rcScreen.left = 0;
 	rcScreen.top = 0;
 	rcScreen.right = GetSystemMetrics(SM_CXSCREEN);
 	rcScreen.bottom = GetSystemMetrics(SM_CYSCREEN);
 	
-	// 计算居中位置
+	// Calculate center position
 	int x = (rcScreen.right - (rcDlg.right - rcDlg.left)) / 2;
 	int y = (rcScreen.bottom - (rcDlg.bottom - rcDlg.top)) / 2;
 	
-	// 确保对话框不会超出屏幕边界
+	// Ensure dialog doesn't extend beyond screen boundaries
 	if (x < 0) x = 0;
 	if (y < 0) y = 0;
 	
-	// 移动对话框到居中位置
+	// Move dialog to center position
 	SetWindowPos(hDlg, NULL, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
 }
 
-// 获取 CPU 信息
+// Get CPU information
 VOID GetCPUInfo(LPTSTR lpszCPUInfo, DWORD dwBufferSize) {
 	if (!lpszCPUInfo || dwBufferSize == 0) return;
 	
