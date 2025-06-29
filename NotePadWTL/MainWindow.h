@@ -1,5 +1,7 @@
 ﻿#pragma once
 #include "pch.h"
+#include "AboutDialog.hpp"
+#include <atlctrls.h>
 using CWindowTraits = CWinTraits<WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, WS_EX_CLIENTEDGE>;
 
 
@@ -42,6 +44,7 @@ public:
 		COMMAND_ID_HANDLER(IDM_EDIT_CUT, OnCut)
 		COMMAND_ID_HANDLER(IDM_EDIT_PASTE, OnPaste)
 		COMMAND_ID_HANDLER(IDM_EDIT_DEL, OnDelete)
+		COMMAND_ID_HANDLER(IDM_HELP_ABOUT, OnAbout)
 
 
 	END_MSG_MAP()
@@ -121,6 +124,12 @@ public:
 	LRESULT OnDelete(WORD wNotifyCode, WPARAM wParam, HWND /*lParam*/, BOOL& /*bHandled*/)
 	{
 		m_editCtrl.Clear();
+		return 0;
+	}
+	LRESULT OnAbout(WORD wNotifyCode, WPARAM wParam, HWND /*lParam*/, BOOL& /*bHandled*/)
+	{
+		CAboutDialog dlg;
+		dlg.DoModal(m_hWnd);
 		return 0;
 	}
 	LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)

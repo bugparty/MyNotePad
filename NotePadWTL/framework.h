@@ -5,9 +5,12 @@
 // Windows Header Files
 #include <windows.h>
 #include <atlbase.h>
+#include <commdlg.h>
+#include <CommCtrl.h>
 extern CComModule _Module;
 #include <atlapp.h>
-#include <atlctrls.h>
+#include <tchar.h>
+#include <winver.h>
 #include <atltypes.h>
 #include <atlcrack.h>
 #include <atlframe.h>

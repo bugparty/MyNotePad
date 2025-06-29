@@ -42,9 +42,9 @@
 #define IDC_MYICON				2
 #ifndef IDC_STATIC
 #define IDC_STATIC				-1
+#endif
+
 #define IDC_ABOUT_WIN_VER               1000
-#define IDC_ABOUT_CPU_INFO              1022
-#define IDC_ABOUT_MEMORY_INFO           1023
 #define IDC_FIND_TEXT                   1001
 #define IDC_FIND_NEXT                   1002
 #define IDC_FIND_PREVIOUS               1003
@@ -66,7 +66,9 @@
 #define IDC_GOTO_GO                     1019
 #define IDC_GOTO_CLOSE                  1020
 #define IDC_GOTO_STATIC_LABEL           1021
-#endif
+#define IDC_ABOUT_CPU_INFO              1022
+#define IDC_ABOUT_MEMORY_INFO           1023
+
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED
