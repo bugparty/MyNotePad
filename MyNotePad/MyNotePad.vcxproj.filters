@@ -1,120 +1,44 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project T    <ClInclude Include="Encoding.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="FileDialog.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Print.h">
-      <Filter>头文件</Filter>
-    </ClInclude>on="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="源文件">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="头文件">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
-    </Filter>
-    <Filter Include="资源文件">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
+    <Manifest Include="MyNotePad.exe.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="AboutDialog.cpp" />
+    <ClCompile Include="Dialog.cpp" />
+    <ClCompile Include="Encoding.cpp" />
+    <ClCompile Include="FileDialog.cpp" />
+    <ClCompile Include="MyNotePad.cpp" />
+    <ClCompile Include="Print.cpp" />
+    <ClCompile Include="Registry.cpp" />
+    <ClCompile Include="StatusBar.cpp" />
+    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="Document.cpp" />
+    <ClCompile Include="Utils.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AboutDialog.h" />
+    <ClInclude Include="Document.h" />
+    <ClInclude Include="Encoding.h" />
+    <ClInclude Include="FileDialog.h" />
+    <ClInclude Include="MyNotePad.h" />
+    <ClInclude Include="Print.h" />
+    <ClInclude Include="Resource.h" />
+    <ClInclude Include="StatusBar.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="Dialog.h" />
+    <ClInclude Include="Registry.h" />
+    <ClInclude Include="Utils.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="MyNotePad.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\MyNotePad.ico" />
+    <Image Include="res\MyNotePadSmall.ico" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="stdafx.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="targetver.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Resource.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="MyNotePad.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="AboutDialog.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Dialog.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Document.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Utils.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Registry.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Encoding.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="StatusBar.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Encoding.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Print.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="stdafx.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="MyNotePad.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="AboutDialog.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Dialog.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Document.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Utils.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Registry.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Encoding.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="FileDialog.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Print.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="StatusBar.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="MyNotePad.rc">
-      <Filter>资源文件</Filter>
-    </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="res\MyNotePad.ico">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="res\MyNotePadSmall.ico">
-      <Filter>资源文件</Filter>
-    </Image>
-  </ItemGroup>
-  <ItemGroup>
-    <Manifest Include="MyNotePad.exe.manifest" />
   </ItemGroup>
 </Project>
