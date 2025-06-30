@@ -66,12 +66,10 @@ public:
 		m_editCtrl.Create(
 			m_hWnd,
 			rcDefault, // Initial size, will be adjusted in WM_SIZE
-			_T(""),
+			nullptr,
 			dwStyle,
 			0, (HMENU)ID_EDIT,
 			0);
-			 
-             /* pointer not needed                */
 
 		// Subclass the edit control for custom keyboard handling and appearance
 		// if (m_editCtrl) {
@@ -136,6 +134,8 @@ public:
 	{
 		HMENU hMenu = LoadMenu(_Module.GetResourceInstance(), MAKEINTRESOURCE(IDC_MYNOTEPAD));
 		SetMenu(hMenu);
+		CDC dc(GetDC());
+		dc.GetTextMetrics(&m_textMetrics);
 
 		CreateEditControl();
 		return 0;
@@ -168,5 +168,5 @@ public:
 		return 0;
 	}
 private:
-	
+	TEXTMETRIC m_textMetrics = { 0 };
 };

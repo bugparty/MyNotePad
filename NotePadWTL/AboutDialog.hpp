@@ -357,6 +357,8 @@ class CAboutDialog : public CDialogImpl<CAboutDialog>
 	LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 	{
 		CenterWindow(GetParent());
+		UpdateAboutDialogInfo();
+		CenterDialog();
 		return TRUE; // Let the system set the focus
 	}
 	LRESULT OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
@@ -365,7 +367,7 @@ class CAboutDialog : public CDialogImpl<CAboutDialog>
 		return 0;
 	}
 	// Center dialog on screen
-	VOID CenterDialog(HWND hDlg) {
+	VOID CenterDialog() {
 		RECT rcDlg, rcScreen;
 
 		// Get dialog size
@@ -390,7 +392,7 @@ class CAboutDialog : public CDialogImpl<CAboutDialog>
 	}
 
 	// Update About dialog information
-	VOID UpdateAboutDialogInfo(HWND hDlg) {
+	VOID UpdateAboutDialogInfo() {
 		// Get and set Windows version information
 		TCHAR szWindowsVersion[256];
 		GetWindowsVersionString(szWindowsVersion, 256);

@@ -7,7 +7,7 @@
 #include <atlbase.h>
 #include <commdlg.h>
 #include <CommCtrl.h>
-extern CComModule _Module;
+
 #include <atlapp.h>
 #include <tchar.h>
 #include <winver.h>
@@ -16,6 +16,7 @@ extern CComModule _Module;
 #include <atlframe.h>
 #include <atlwin.h>
 #include <atlstr.h>
+extern CAppModule  _Module;
 // C RunTime Header Files
 #include <stdlib.h>
 #include <malloc.h>
