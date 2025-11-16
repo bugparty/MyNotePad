@@ -131,26 +131,27 @@ jobs:
       run: |
         $version = "${{ github.ref_name }}"
         $zipName = "MyNotePad-$version-Windows.zip"
-        
+
         # Create README for the release
-        @"
+        $readme = @"
 MyNotePad $version - Windows Release
 ===================================
 
 This package contains the compiled Windows executables for MyNotePad.
 
 Files included:
-"@ | Out-File -FilePath "dist\README.txt" -Encoding UTF8
-        
+"@
+        $readme | Out-File -FilePath "dist\README.txt" -Encoding UTF8
+
         Get-ChildItem dist -Name "*.exe" | ForEach-Object {
           Add-Content -Path "dist\README.txt" -Value "- $_ - Main application executable"
         }
-        
+
         Get-ChildItem dist -Name "*.pdb" | ForEach-Object {
           Add-Content -Path "dist\README.txt" -Value "- $_ - Debug symbols (optional)"
         }
-        
-        @"
+
+        $additionalInfo = @"
 
 Installation:
 1. Extract all files to a folder of your choice
@@ -162,12 +163,13 @@ System Requirements:
 - Visual C++ Redistributable (usually pre-installed)
 
 For more information, visit: https://github.com/${{ github.repository }}
-"@ | Add-Content -Path "dist\README.txt"
-        
+"@
+        $additionalInfo | Add-Content -Path "dist\README.txt"
+
         # Create ZIP package
         Compress-Archive -Path "dist\*" -DestinationPath $zipName -Force
         Write-Host "Created release package: $zipName"
-        
+
         echo "release_package=$zipName" >> $env:GITHUB_OUTPUT
       shell: pwsh
       id: create_package
