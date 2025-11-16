@@ -6,13 +6,27 @@ missingIncludeSystem
 
 # Suppress warnings for precompiled headers
 missingInclude:stdafx.h
+missingInclude:pch.h
+missingInclude:framework.h
 
 # Suppress warnings about unused functions in generated code
 unusedFunction:*rc*
 unusedFunction:*Resource.cpp
+unusedFunction:_tWinMain
 
 # Suppress style warnings for Windows message handlers (intentionally unused parameters)
 unusedVariable:UNREFERENCED_PARAMETER
 
-# Known safe usage of static variables
-knownConditionTrueFalse:Dialog.cpp:353
+# Suppress warnings for resource files and auto-generated code
+*:*.rc
+*:Resource.cpp
+*:stdafx.cpp
+*:pch.cpp
+
+# Windows API specific - extern variables are defined elsewhere
+variableScope
+
+# WTL and precompiled header files
+*:NotePadWTL/framework.h
+*:NotePadWTL/pch.h
+*:NotePadWTL/pch.cpp

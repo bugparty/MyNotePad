@@ -344,13 +344,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			// Handle color messages for the edit control
 			HDC hdc = (HDC)wParam;
 			HWND hEdit = (HWND)lParam;
-			
+
 			// Set custom colors for better appearance
 			SetTextColor(hdc, RGB(33, 37, 41));        // Dark gray text (modern)
 			SetBkColor(hdc, RGB(255, 255, 255));       // Pure white background
-			
-			// Create and return a brush for the background
-			static HBRUSH hEditBrush = CreateSolidBrush(RGB(255, 255, 255));
+
+			// Create and return a brush for the background (only once)
+			static HBRUSH hEditBrush = NULL;
+			if (hEditBrush == NULL) {
+				hEditBrush = CreateSolidBrush(RGB(255, 255, 255));
+			}
 			return (LRESULT)hEditBrush;
 		}
 
