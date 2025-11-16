@@ -3,20 +3,8 @@
 #include "Utils.h"
 #include "Encoding.h"
 
-static LPTSTR hDocBuf;
-static DWORD dwReaded;
-static DWORD dwCurrentBufSize = 4096 * 8;
+// Current encoding for the document
 static EncodingType g_currentEncoding = ENCODING_UTF8; // Default encoding
-void init_buff(){
-	hDocBuf = (LPTSTR)LocalAlloc(LMEM_ZEROINIT, dwCurrentBufSize);
-
-}
-void free_buff(){
-	if (hDocBuf){
-		LocalFree(hDocBuf);
-	}
-}
-
 
 VOID DO_OPEN_FILE(HWND hEdit, LPTSTR filename){
 	// Use new encoding detection and conversion functionality

@@ -22,6 +22,8 @@ TCHAR szFailedToLoadCommCtl[MAX_LOADSTRING];
 // Undo/Redo state tracking
 static BOOL g_bLastWasUndo = FALSE;				// Track if last operation was undo
 
+// GDI resources
+static HBRUSH g_hEditBrush = NULL;				// Brush for edit control background
 
 // Forward declarations of functions included in this code module: 
 ATOM				MyRegisterClass(HINSTANCE hInstance);
@@ -263,6 +265,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_DESTROY:
 		CleanupEditResources(); // Clean up edit control resources
 		DestroyStatusBar(); // Clean up status bar resources
+
+		// Clean up GDI resources
+		if (g_hEditBrush != NULL) {
+			DeleteObject(g_hEditBrush);
+			g_hEditBrush = NULL;
+		}
+
 		PostQuitMessage(0);
 		return 0;
 		break;
@@ -344,14 +353,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			// Handle color messages for the edit control
 			HDC hdc = (HDC)wParam;
 			HWND hEdit = (HWND)lParam;
-			
+
 			// Set custom colors for better appearance
 			SetTextColor(hdc, RGB(33, 37, 41));        // Dark gray text (modern)
 			SetBkColor(hdc, RGB(255, 255, 255));       // Pure white background
-			
-			// Create and return a brush for the background
-			static HBRUSH hEditBrush = CreateSolidBrush(RGB(255, 255, 255));
-			return (LRESULT)hEditBrush;
+
+			// Create brush for the background (only once, lazily)
+			if (g_hEditBrush == NULL) {
+				g_hEditBrush = CreateSolidBrush(RGB(255, 255, 255));
+			}
+			return (LRESULT)g_hEditBrush;
 		}
 
 	case WM_VSCROLL:
