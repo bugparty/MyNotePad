@@ -1,0 +1,18 @@
+# Cppcheck suppressions file for MyNotePad
+# Suppress specific warnings that are false positives or intentional
+
+# Suppress warnings for Windows API macros
+missingIncludeSystem
+
+# Suppress warnings for precompiled headers
+missingInclude:stdafx.h
+
+# Suppress warnings about unused functions in generated code
+unusedFunction:*rc*
+unusedFunction:*Resource.cpp
+
+# Suppress style warnings for Windows message handlers (intentionally unused parameters)
+unusedVariable:UNREFERENCED_PARAMETER
+
+# Known safe usage of static variables
+knownConditionTrueFalse:Dialog.cpp:353

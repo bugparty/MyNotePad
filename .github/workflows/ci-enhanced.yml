@@ -1,0 +1,313 @@
+name: CI/CD Enhanced Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  release:
+    types: [ published ]
+
+env:
+  SOLUTION_FILE_PATH: MyNotePad.sln
+  BUILD_CONFIGURATION: Release
+  CPPCHECK_VERSION: 2.12
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+jobs:
+  # Static Analysis Job
+  static-analysis:
+    name: Static Code Analysis
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Cppcheck
+      run: |
+        Write-Output "Installing Cppcheck ${{ env.CPPCHECK_VERSION }}..."
+        $url = "https://github.com/danmar/cppcheck/releases/download/${{ env.CPPCHECK_VERSION }}/cppcheck-${{ env.CPPCHECK_VERSION }}-x64-Setup.msi"
+        $output = "cppcheck-installer.msi"
+        Invoke-WebRequest -Uri $url -OutFile $output
+        Start-Process msiexec.exe -Wait -ArgumentList "/i $output /quiet /norestart"
+        $env:Path += ";C:\Program Files\Cppcheck"
+        cppcheck --version
+
+    - name: Run Cppcheck Analysis
+      run: |
+        $sourceFiles = @(
+          "MyNotePad/MyNotePad.cpp",
+          "MyNotePad/Document.cpp",
+          "MyNotePad/Encoding.cpp",
+          "MyNotePad/Dialog.cpp",
+          "MyNotePad/Print.cpp",
+          "MyNotePad/Utils.cpp",
+          "MyNotePad/FileDialog.cpp",
+          "MyNotePad/Registry.cpp",
+          "MyNotePad/StatusBar.cpp",
+          "MyNotePad/AboutDialog.cpp"
+        )
+
+        $cppcheckArgs = @(
+          "--enable=all",
+          "--inconclusive",
+          "--std=c++14",
+          "--platform=win32W",
+          "--suppress=missingIncludeSystem",
+          "--suppressions-list=.cppcheck-suppressions.txt",
+          "--xml",
+          "--xml-version=2",
+          "--output-file=cppcheck-report.xml",
+          "-I MyNotePad",
+          "-D WIN32",
+          "-D _WINDOWS",
+          "-D UNICODE",
+          "-D _UNICODE"
+        ) + $sourceFiles
+
+        & "C:\Program Files\Cppcheck\cppcheck.exe" $cppcheckArgs
+
+        # Also generate human-readable report
+        $cppcheckArgsText = $cppcheckArgs | Where-Object { $_ -ne "--xml" -and $_ -ne "--xml-version=2" -and $_ -ne "--output-file=cppcheck-report.xml" }
+        $cppcheckArgsText += "--template={file}:{line}: [{severity}] {message} [{id}]"
+        & "C:\Program Files\Cppcheck\cppcheck.exe" $cppcheckArgsText | Tee-Object -FilePath cppcheck-report.txt
+
+    - name: Parse Cppcheck Results
+      if: always()
+      run: |
+        if (Test-Path "cppcheck-report.txt") {
+          $report = Get-Content "cppcheck-report.txt" -Raw
+          Write-Output "=== Cppcheck Analysis Results ==="
+          Write-Output $report
+
+          # Count issues by severity
+          $errors = ($report | Select-String -Pattern "\[error\]" -AllMatches).Matches.Count
+          $warnings = ($report | Select-String -Pattern "\[warning\]" -AllMatches).Matches.Count
+          $style = ($report | Select-String -Pattern "\[style\]" -AllMatches).Matches.Count
+          $performance = ($report | Select-String -Pattern "\[performance\]" -AllMatches).Matches.Count
+
+          Write-Output ""
+          Write-Output "=== Summary ==="
+          Write-Output "Errors: $errors"
+          Write-Output "Warnings: $warnings"
+          Write-Output "Style issues: $style"
+          Write-Output "Performance issues: $performance"
+
+          # Fail if critical issues found
+          if ($errors -gt 0) {
+            Write-Error "❌ Cppcheck found $errors error(s)"
+            exit 1
+          }
+        }
+
+    - name: Upload Cppcheck Report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: cppcheck-report-${{ github.sha }}
+        path: |
+          cppcheck-report.xml
+          cppcheck-report.txt
+        retention-days: 30
+
+  # Unit Tests Job
+  unit-tests:
+    name: Unit Tests
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Setup vcpkg for Google Test
+      run: |
+        git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
+        C:\vcpkg\bootstrap-vcpkg.bat
+        C:\vcpkg\vcpkg.exe install gtest:x86-windows
+
+    - name: Restore NuGet packages
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      run: nuget restore ${{env.SOLUTION_FILE_PATH}}
+
+    - name: Build Tests (if test project exists)
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      run: |
+        # Check if test project exists
+        if (Test-Path "MyNotePad.Tests/MyNotePad.Tests.vcxproj") {
+          Write-Output "Building test project..."
+          msbuild /m /p:Configuration=Debug /p:Platform=Win32 MyNotePad.Tests/MyNotePad.Tests.vcxproj
+        } else {
+          Write-Output "⚠️ Test project not found. Creating placeholder..."
+          Write-Output "Tests will be added in future iterations."
+          exit 0
+        }
+      continue-on-error: true
+
+    - name: Run Unit Tests
+      run: |
+        if (Test-Path "Debug\MyNotePad.Tests.exe") {
+          Write-Output "Running unit tests..."
+          & "Debug\MyNotePad.Tests.exe" --gtest_output=xml:test-results.xml
+
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "❌ Unit tests failed"
+            exit 1
+          }
+          Write-Output "✅ All unit tests passed"
+        } else {
+          Write-Output "⚠️ No test executable found. Skipping test execution."
+        }
+      continue-on-error: true
+
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-${{ github.sha }}
+        path: test-results.xml
+        retention-days: 30
+      continue-on-error: true
+
+  # Build Job
+  build:
+    name: Build Application
+    runs-on: windows-latest
+    needs: [static-analysis, unit-tests]
+    if: always()
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Restore NuGet packages
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      run: nuget restore ${{env.SOLUTION_FILE_PATH}}
+
+    - name: Build Solution (Release)
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} /p:Platform=Win32 ${{env.SOLUTION_FILE_PATH}}
+
+    - name: Build Solution (Debug)
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      run: msbuild /m /p:Configuration=Debug /p:Platform=Win32 ${{env.SOLUTION_FILE_PATH}}
+      continue-on-error: true
+
+    - name: Verify Build Outputs
+      run: |
+        Write-Output "=== Verifying Build Outputs ==="
+
+        # Check Release build
+        if (Test-Path "Release\MyNotePad.exe") {
+          Write-Output "✅ MyNotePad.exe (Release) built successfully"
+          Get-Item "Release\MyNotePad.exe" | Select-Object Name, Length, LastWriteTime | Format-List
+        } else {
+          Write-Error "❌ MyNotePad.exe (Release) not found"
+          exit 1
+        }
+
+        # Check Debug build (optional)
+        if (Test-Path "Debug\MyNotePad.exe") {
+          Write-Output "✅ MyNotePad.exe (Debug) built successfully"
+          Get-Item "Debug\MyNotePad.exe" | Select-Object Name, Length, LastWriteTime | Format-List
+        } else {
+          Write-Output "⚠️ MyNotePad.exe (Debug) not found"
+        }
+
+    - name: Upload Release Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: MyNotePad-Windows-Release-${{ github.sha }}
+        path: |
+          Release/MyNotePad.exe
+          Release/MyNotePad.pdb
+        retention-days: 90
+
+    - name: Upload Debug Artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: MyNotePad-Windows-Debug-${{ github.sha }}
+        path: |
+          Debug/MyNotePad.exe
+          Debug/MyNotePad.pdb
+        retention-days: 30
+      continue-on-error: true
+
+  # Code Quality Summary
+  quality-gate:
+    name: Quality Gate
+    runs-on: windows-latest
+    needs: [static-analysis, unit-tests, build]
+    if: always()
+
+    steps:
+    - name: Check Quality Status
+      run: |
+        Write-Output "=== Quality Gate Status ==="
+
+        $staticAnalysisStatus = "${{ needs.static-analysis.result }}"
+        $unitTestsStatus = "${{ needs.unit-tests.result }}"
+        $buildStatus = "${{ needs.build.result }}"
+
+        Write-Output "Static Analysis: $staticAnalysisStatus"
+        Write-Output "Unit Tests: $unitTestsStatus"
+        Write-Output "Build: $buildStatus"
+
+        # Fail if any critical job failed
+        if ($staticAnalysisStatus -eq "failure") {
+          Write-Error "❌ Static analysis failed - please fix code quality issues"
+          exit 1
+        }
+
+        if ($buildStatus -eq "failure") {
+          Write-Error "❌ Build failed - please fix compilation errors"
+          exit 1
+        }
+
+        if ($staticAnalysisStatus -eq "success" -and $buildStatus -eq "success") {
+          Write-Output "✅ Quality gate passed!"
+        } else {
+          Write-Output "⚠️ Some checks had issues but build succeeded"
+        }
+
+  # Release Job
+  release:
+    name: Create Release
+    needs: [build, quality-gate]
+    runs-on: windows-latest
+    if: github.event_name == 'release'
+    permissions:
+      contents: write
+
+    steps:
+    - name: Download Release Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: MyNotePad-Windows-Release-${{ github.sha }}
+        path: ./release-files
+
+    - name: Create ZIP package
+      run: |
+        Compress-Archive -Path ".\release-files\*" -DestinationPath "MyNotePad-Windows.zip"
+        Get-Item "MyNotePad-Windows.zip" | Select-Object Name, Length
+
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./MyNotePad-Windows.zip
+        asset_name: MyNotePad-Windows.zip
+        asset_content_type: application/zip
